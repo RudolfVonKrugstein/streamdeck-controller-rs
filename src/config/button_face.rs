@@ -15,6 +15,7 @@ pub struct ButtonFaceConfig {
 
 #[cfg(test)]
 mod tests {
+    use crate::config::label::LabelConfigWithColor;
     use super::*;
 
     #[test]
@@ -78,18 +79,18 @@ superlabel:
         // Test
         assert_eq!(deserialize.color, Some(ColorConfig::HEXString(String::from(color_value))));
         assert_eq!(deserialize.file, Some(String::from(file_value)));
-        assert_eq!(deserialize.label, Some(LabelConfig {
+        assert_eq!(deserialize.label, Some(LabelConfig::WithColor(LabelConfigWithColor{
             text: String::from(label_value),
             color: Some(ColorConfig::HEXString(String::from(label_color_value)))
-        }));
-        assert_eq!(deserialize.sublabel, Some(LabelConfig {
+        })));
+        assert_eq!(deserialize.sublabel, Some(LabelConfig::WithColor(LabelConfigWithColor{
             text: String::from(sub_label_value),
             color: Some(ColorConfig::HEXString(String::from(sub_label_color_value)))
-        }));
-        assert_eq!(deserialize.superlabel, Some(LabelConfig {
+        })));
+        assert_eq!(deserialize.superlabel, Some(LabelConfig::WithColor(LabelConfigWithColor {
             text: String::from(super_label_value),
             color: Some(ColorConfig::HEXString(String::from(super_label_color_value)))
-        }));
+        })));
     }
 }
 

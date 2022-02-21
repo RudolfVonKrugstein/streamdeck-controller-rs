@@ -39,7 +39,7 @@ pages:
       - position:
           row: 0
           col: 0
-        byname: button1
+        button: button1
       - position:
           row: 0
           col: 1
