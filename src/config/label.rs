@@ -1,13 +1,12 @@
-use serde::{Deserialize};
 use crate::config::color::ColorConfig;
-
+use serde::Deserialize;
 
 /// A label that can be placed on a button.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum LabelConfig {
     JustText(String),
-    WithColor(LabelConfigWithColor)
+    WithColor(LabelConfigWithColor),
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -30,7 +29,10 @@ mod tests {
         let deserialize: LabelConfig = serde_yaml::from_str(&yaml).unwrap();
 
         // Test
-        assert_eq!(deserialize, LabelConfig::JustText(String::from(label_value)));
+        assert_eq!(
+            deserialize,
+            LabelConfig::JustText(String::from(label_value))
+        );
     }
 
     #[test]
@@ -43,10 +45,13 @@ mod tests {
         let deserialize: LabelConfig = serde_yaml::from_str(&yaml).unwrap();
 
         // Test
-        assert_eq!(deserialize, LabelConfig::WithColor(LabelConfigWithColor {
-            color: None,
-            text: String::from(label_value)
-        }));
+        assert_eq!(
+            deserialize,
+            LabelConfig::WithColor(LabelConfigWithColor {
+                color: None,
+                text: String::from(label_value)
+            })
+        );
     }
 
     #[test]
@@ -60,9 +65,12 @@ mod tests {
         let deserialize: LabelConfig = serde_yaml::from_str(&yaml).unwrap();
 
         // Test
-        assert_eq!(deserialize, LabelConfig::WithColor(LabelConfigWithColor {
-            color: Some(ColorConfig::HEXString(String::from(color_value))),
-            text: String::from(label_value)
-        }));
+        assert_eq!(
+            deserialize,
+            LabelConfig::WithColor(LabelConfigWithColor {
+                color: Some(ColorConfig::HEXString(String::from(color_value))),
+                text: String::from(label_value)
+            })
+        );
     }
 }

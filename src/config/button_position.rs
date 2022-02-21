@@ -1,4 +1,4 @@
-use serde::{Deserialize};
+use serde::Deserialize;
 
 /// Position of a button on a page.
 ///
@@ -6,7 +6,7 @@ use serde::{Deserialize};
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct ButtonPositionConfig {
     pub row: i32,
-    pub col: i32
+    pub col: i32,
 }
 
 #[cfg(test)]
@@ -22,7 +22,7 @@ mod tests {
         let deserialize: ButtonPositionConfig = serde_yaml::from_str(&yaml).unwrap();
 
         // Test
-        assert_eq!(deserialize, ButtonPositionConfig {row: 0 ,col: 1});
+        assert_eq!(deserialize, ButtonPositionConfig { row: 0, col: 1 });
     }
 
     #[test]
@@ -34,7 +34,7 @@ mod tests {
         let deserialize: ButtonPositionConfig = serde_yaml::from_str(&yaml).unwrap();
 
         // Test
-        assert_eq!(deserialize, ButtonPositionConfig {row: -1 ,col: -2});
+        assert_eq!(deserialize, ButtonPositionConfig { row: -1, col: -2 });
     }
 
     #[test]

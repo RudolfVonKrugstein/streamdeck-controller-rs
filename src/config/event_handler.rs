@@ -1,5 +1,4 @@
-use serde::{Deserialize};
-
+use serde::Deserialize;
 
 /// A label that can be placed on a button.
 #[derive(Debug, Deserialize, PartialEq)]
