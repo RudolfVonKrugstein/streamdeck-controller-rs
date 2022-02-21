@@ -15,6 +15,7 @@ mod event_handler;
 mod label;
 mod page;
 mod error;
+pub use error::*;
 
 /// The complete config for streamdeck-controller-rs
 #[derive(Debug, Deserialize, PartialEq)]

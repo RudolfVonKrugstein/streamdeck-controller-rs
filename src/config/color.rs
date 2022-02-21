@@ -13,7 +13,7 @@ pub enum ColorConfig {
 
 impl ColorConfig {
     /// Convert to an image color.
-    fn to_image_rgba_color(&self) -> Result<image::Rgba<u8>, error::Error> {
+    pub fn to_image_rgba_color(&self) -> Result<image::Rgba<u8>, error::Error> {
         match self {
             ColorConfig::HEXString(hex) => {
                 if &hex[..1] != "#" {
