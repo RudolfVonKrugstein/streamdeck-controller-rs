@@ -30,6 +30,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "approx"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cab112f0a86d568ea0e627cc1d6be74a1e9cd55214684db5561995f6dad897c6"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -379,6 +388,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "imageproc"
+version = "0.22.0"
+source = "git+https://github.com/image-rs/imageproc#cd5f49737717c574861055db052a73349ffc60d1"
+dependencies = [
+ "approx",
+ "conv",
+ "image 0.23.14",
+ "itertools 0.10.3",
+ "nalgebra",
+ "num 0.4.0",
+ "rand",
+ "rand_distr",
+ "rayon",
+ "rusttype",
+]
+
+[[package]]
 name = "indexmap"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -490,7 +516,16 @@ version = "0.1.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcad67dcec2d58ff56f6292582377e6921afdf3bfbd533e26fb8900ae575e002"
 dependencies = [
- "rawpointer",
+ "rawpointer 0.1.0",
+]
+
+[[package]]
+name = "matrixmultiply"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "add85d4dd35074e6fedc608f8c8f513a3548619a9024b751949ef0e8e45a4d84"
+dependencies = [
+ "rawpointer 0.2.1",
 ]
 
 [[package]]
@@ -564,6 +599,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "more-asserts"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7843ec2de400bcbc6a6328c958dc38e5359da6e93e72e37bc5246bf1ae776389"
+
+[[package]]
+name = "nalgebra"
+version = "0.30.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fb2d0de08694bed883320212c18ee3008576bfe8c306f4c3c4a58b4876998be"
+dependencies = [
+ "approx",
+ "matrixmultiply 0.3.2",
+ "num-complex 0.4.0",
+ "num-rational 0.4.0",
+ "num-traits",
+ "simba",
+ "typenum",
+]
+
+[[package]]
 name = "nanorand"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -595,11 +651,25 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b7a8e9be5e039e2ff869df49155f1c06bd01ade2117ec783e56ab0932b67a8f"
 dependencies = [
- "num-bigint",
- "num-complex",
+ "num-bigint 0.3.3",
+ "num-complex 0.3.1",
  "num-integer",
  "num-iter",
  "num-rational 0.3.2",
+ "num-traits",
+]
+
+[[package]]
+name = "num"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43db66d1170d347f9a065114077f7dccb00c1b9478c89384490a3425279a4606"
+dependencies = [
+ "num-bigint 0.4.3",
+ "num-complex 0.4.0",
+ "num-integer",
+ "num-iter",
+ "num-rational 0.4.0",
  "num-traits",
 ]
 
@@ -615,10 +685,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-bigint"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f93ab6289c7b344a8a9f60f88d80aa20032336fe78da341afc91c8a2341fc75f"
+dependencies = [
+ "autocfg",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
 name = "num-complex"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "747d632c0c558b87dbabbe6a82f3b4ae03720d0646ac5b7b4dae89394be5f2c5"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
+name = "num-complex"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26873667bbbb7c5182d4a37c1add32cdf09f841af72da53318fdb81543c15085"
 dependencies = [
  "num-traits",
 ]
@@ -651,7 +741,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "12ac428b1cb17fce6f731001d307d351ec70a6d202fc2e60f7d4c5e42d8f4f07"
 dependencies = [
  "autocfg",
- "num-bigint",
+ "num-bigint 0.3.3",
  "num-integer",
  "num-traits",
 ]
@@ -663,6 +753,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d41702bd167c2df5520b384281bc111a4b5efcf7fbc4c9c222c815b07e0a6a6a"
 dependencies = [
  "autocfg",
+ "num-bigint 0.4.3",
  "num-integer",
  "num-traits",
 ]
@@ -694,6 +785,12 @@ checksum = "9f923fb806c46266c02ab4a5b239735c144bdeda724a50ed058e5226f594cde3"
 dependencies = [
  "ttf-parser",
 ]
+
+[[package]]
+name = "paste"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0744126afe1a6dd7f394cb50a716dbe086cb06e255e53d8d0185d82828358fb5"
 
 [[package]]
 name = "pin-project"
@@ -856,6 +953,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebac11a9d2e11f2af219b8b8d833b76b1ea0e054aa0e8d8e9e4cbde353bdf019"
 
 [[package]]
+name = "rawpointer"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3"
+
+[[package]]
 name = "rayon"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -903,7 +1006,7 @@ version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04ada202c9685e1d72a7420c578e92b358dbf807d3dfabb676a3dab9cc3bb12f"
 dependencies = [
- "matrixmultiply",
+ "matrixmultiply 0.1.15",
  "num 0.1.42",
 ]
 
@@ -922,6 +1025,15 @@ name = "ryu"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73b4b750c782965c211b42f022f59af1fbceabdd026623714f104152f1ec149f"
+
+[[package]]
+name = "safe_arch"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "794821e4ccb0d9f979512f9c1973480123f9bd62a90d74ab0f9426fcf8f4a529"
+dependencies = [
+ "bytemuck",
+]
 
 [[package]]
 name = "scoped_threadpool"
@@ -968,6 +1080,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "simba"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13a2609e876d4f77f6ab7ff5254fc39b4f1927ba8e6db3d18be7c32534d3725e"
+dependencies = [
+ "approx",
+ "num-complex 0.4.0",
+ "num-traits",
+ "paste",
+ "wide",
+]
+
+[[package]]
 name = "smallvec"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -987,7 +1112,9 @@ name = "streamdeck-controller-rs"
 version = "0.1.0"
 dependencies = [
  "image 0.23.14",
- "imageproc",
+ "imageproc 0.22.0 (git+https://github.com/image-rs/imageproc)",
+ "more-asserts",
+ "rusttype",
  "serde",
  "serde_yaml",
  "streamdeck-hid-rs",
@@ -1001,7 +1128,7 @@ checksum = "51589127f9e19b2284e65ee382072f346cef94f4ca1fe0d654294bd66750d870"
 dependencies = [
  "hidapi",
  "image 0.24.1",
- "imageproc",
+ "imageproc 0.22.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log",
  "mockall",
 ]
@@ -1059,6 +1186,12 @@ name = "ttf-parser"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e5d7cd7ab3e47dda6e56542f4bbf3824c15234958c6e1bd6aaa347e93499fdc"
+
+[[package]]
+name = "typenum"
+version = "1.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
 
 [[package]]
 name = "unicode-xid"
@@ -1137,6 +1270,16 @@ name = "weezl"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b77fdfd5a253be4ab714e4ffa3c49caf146b4de743e97510c0656cf90f1e8e"
+
+[[package]]
+name = "wide"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3aba2d1dac31ac7cae82847ac5b8be822aee8f99a4e100f279605016b185c5f"
+dependencies = [
+ "bytemuck",
+ "safe_arch",
+]
 
 [[package]]
 name = "yaml-rust"

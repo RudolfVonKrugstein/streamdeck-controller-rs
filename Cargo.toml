@@ -9,5 +9,7 @@ edition = "2021"
 serde = { version = "~1", features = ["derive"] }
 serde_yaml = "~0"
 image = "0.23.6"
-imageproc = "~0"
+imageproc = { git = "https://github.com/image-rs/imageproc" }
+rusttype = "~0"
 streamdeck-hid-rs = "~0"
+more-asserts = "~0"

@@ -1,7 +1,6 @@
 use serde::Deserialize;
 
 mod button;
-use button::*;
 mod button_face;
 pub use button_face::*;
 mod button_position;
@@ -13,6 +12,7 @@ pub use color::*;
 mod defaults;
 mod event_handler;
 mod label;
+pub use label::*;
 mod page;
 mod error;
 pub use error::*;
