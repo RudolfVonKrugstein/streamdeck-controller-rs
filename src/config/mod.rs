@@ -4,3 +4,5 @@
 
 mod color;
 mod defaults;
+mod button_face;
+mod label;
