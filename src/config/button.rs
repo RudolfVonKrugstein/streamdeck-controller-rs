@@ -15,7 +15,7 @@ struct ButtonConfigWithName {
 
 /// Configuration of a button that may have no name
 #[derive(Debug, Deserialize, PartialEq)]
-struct ButtonConfigOptionalName {
+pub struct ButtonConfigOptionalName {
     name: Option<String>,
     up_face: Option<ButtonFaceConfig>,
     down_face: Option<ButtonFaceConfig>,
@@ -26,7 +26,7 @@ struct ButtonConfigOptionalName {
 /// Configuration of a button or just the name of a button
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(untagged)]
-enum ButtonOrButtonName {
+pub enum ButtonOrButtonName {
     ButtonName(String),
     Button(ButtonConfigOptionalName)
 }
@@ -96,7 +96,9 @@ down_handler:
 
         // Act
         let deserialize: ButtonConfigOptionalName = serde_yaml::from_str(&yaml).unwrap();
-        assert_eq!(deserialize.name, Some("button"));
+
+        // Test
+        assert_eq!(deserialize.name, Some(String::from("button")));
         assert_eq!(deserialize.up_face, Some(ButtonFaceConfig {
             color: Some(ColorConfig::HEXString(String::from("#FF0000"))),
             file: None,
@@ -170,9 +172,9 @@ down_handler:
         let yaml = format!("'{}'", button_name);
 
         // Act
-        let deserialize: ColorButtonOrButtonNameConfig = serde_yaml::from_str(&yaml).unwrap();
+        let deserialize: ButtonOrButtonName = serde_yaml::from_str(&yaml).unwrap();
 
         // Test
-        assert_eq!(deserialize, ButtonOrButtonName::JustName(String::from(button_name)));
+        assert_eq!(deserialize, ButtonOrButtonName::ButtonName(String::from(button_name)));
     }
 }
