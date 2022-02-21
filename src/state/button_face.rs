@@ -35,6 +35,25 @@ impl ButtonFace {
             back_color
         );
 
+        // Draw the image!
+        if let Some(path) = &face_config.file {
+            let top_image = image::io::Reader::open(path)
+                .map_err(|e| Error::ImageOpeningError(e))?
+                .decode()
+                .map_err(|e| Error::ImageEncodingError(e))?;
+            let top_image = image::imageops::resize(
+                &top_image,
+                width,
+                height,
+                image::imageops::FilterType::Lanczos3
+            );
+            image::imageops::overlay(
+                &mut face,
+                &top_image,
+                0, 0
+            );
+        }
+
         // Convert to rgb image
         let face = image::DynamicImage::ImageRgba8(face).into_rgb();
 
@@ -97,6 +116,44 @@ mod tests {
         for x in 0..width {
             for y in 0..height {
                 assert_eq!(face.face.get_pixel(x, y).0, [255,0,0])
+            }
+        }
+    }
+
+    #[test]
+    fn filled_with_background_image() {
+        // Setup
+        let back_image_bytes = include_bytes!("./test_image_st_orig.png");
+        let back_image = image::load_from_memory(back_image_bytes).unwrap();
+
+        // Act
+        let face = ButtonFace::from_config(
+            streamdeck_hid_rs::StreamDeckType::Orig,
+            &config::ButtonFaceConfig {
+                color: Some(config::ColorConfig::HEXString(
+                    String::from("#FF0000")
+                )),
+                file: Some(String::from("./src/state/test_image_st_orig.png")),
+                label: None,
+                sublabel: None,
+                superlabel: None
+            }
+        ).unwrap();
+
+        // Test
+        let (width, height) = streamdeck_hid_rs::StreamDeckType::Orig.button_image_size();
+        for x in 0..width {
+            for y in 0..height {
+                if x >= width / 2 {
+                    // On the right size, the image is transparent.
+                    // We expect the background.
+                    assert_eq!(face.face.get_pixel(x, y).0, [255,0,0])
+                } else {
+                    assert_eq!(
+                        face.face.get_pixel(x, y),
+                        &back_image.get_pixel(x, y).to_rgb()
+                    )
+                }
             }
         }
     }
