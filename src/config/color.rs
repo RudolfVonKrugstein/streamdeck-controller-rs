@@ -4,7 +4,7 @@ use serde::{Deserialize};
 /// Color in the configuration.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(untagged)]
-enum ColorConfig {
+pub enum ColorConfig {
     /// The color, when it is provided as an HEX string (example #FF0000)
     HEXString(String),
     /// The color with explicit values for red, green and blue
@@ -12,10 +12,10 @@ enum ColorConfig {
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
-struct ColorConfigRGB {
-    red: u8,
-    green: u8,
-    blue: u8
+pub struct ColorConfigRGB {
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8
 }
 
 #[cfg(test)]
