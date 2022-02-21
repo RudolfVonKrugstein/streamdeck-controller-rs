@@ -5,7 +5,7 @@ use crate::config::event_handler::EventHandlerConfig;
 
 /// Configuration of a button that must have a name
 #[derive(Debug, Deserialize, PartialEq)]
-struct ButtonConfigWithName {
+pub struct ButtonConfigWithName {
     name: String,
     up_face: Option<ButtonFaceConfig>,
     down_face: Option<ButtonFaceConfig>,
