@@ -1,16 +1,20 @@
 use serde::Deserialize;
 
 mod button;
+use button::*;
 mod button_face;
+pub use button_face::*;
 mod button_position;
 /// Load configuration file.
 ///
 /// See the (example config)[../../doc/example_config.yml].
 mod color;
+pub use color::*;
 mod defaults;
 mod event_handler;
 mod label;
 mod page;
+mod error;
 
 /// The complete config for streamdeck-controller-rs
 #[derive(Debug, Deserialize, PartialEq)]

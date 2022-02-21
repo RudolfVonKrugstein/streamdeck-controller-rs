@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use crate::config::error;
 
 /// Color in the configuration.
 #[derive(Debug, Deserialize, PartialEq)]
@@ -8,6 +9,41 @@ pub enum ColorConfig {
     HEXString(String),
     /// The color with explicit values for red, green and blue
     RGB(ColorConfigRGB),
+}
+
+impl ColorConfig {
+    /// Convert to an image color.
+    fn to_image_rgba_color(&self) -> Result<image::Rgba<u8>, error::Error> {
+        match self {
+            ColorConfig::HEXString(hex) => {
+                if &hex[..1] != "#" {
+                    return Err(
+                        error::Error::InvalidColorHexString(hex.clone())
+                    );
+                }
+                let without_prefix = hex.trim_start_matches("#");
+                let num = u32::from_str_radix(without_prefix, 16)
+                    .map_err(|_| error::Error::InvalidColorHexString(hex.clone()))?;
+                // Result
+                match without_prefix.len() {
+                    6 => Ok(image::Rgba([
+                        (num >> 16) as u8,
+                        (num >> 8)  as u8,
+                        (num & 0xFF) as u8,
+                        255])),
+                    8 => Ok(image::Rgba([
+                        (num >> 24) as u8,
+                        (num >> 16) as u8,
+                        (num >> 8) as u8,
+                        (num & 0xFF) as u8])),
+                    _ => Err(error::Error::InvalidColorHexString(hex.clone()))
+                }
+            },
+            ColorConfig::RGB(c) => {
+                Ok(image::Rgba([c.red, c.green, c.blue, 0xFF]))
+            }
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -50,5 +86,78 @@ mod tests {
             deserialize,
             ColorConfig::RGB(ColorConfigRGB { red, green, blue })
         );
+    }
+
+    #[test]
+    fn hex_to_rgba() {
+        // Setup
+        let hex_color = ColorConfig::HEXString(String::from("#000FFF"));
+
+        // Act
+        let color = hex_color.to_image_rgba_color().unwrap();
+
+        // Test
+        assert_eq!(color.0[0], 0);
+        assert_eq!(color.0[1], 0x0F);
+        assert_eq!(color.0[2], 0xFF);
+        assert_eq!(color.0[3], 0xFF);
+    }
+
+    #[test]
+    fn hex_with_alpha_to_rgba() {
+        // Setup
+        let hex_color = ColorConfig::HEXString(String::from("#000FFFF0"));
+
+        // Act
+        let color = hex_color.to_image_rgba_color().unwrap();
+
+        // Test
+        assert_eq!(color.0[0], 0);
+        assert_eq!(color.0[1], 0x0F);
+        assert_eq!(color.0[2], 0xFF);
+        assert_eq!(color.0[3], 0xF0);
+    }
+
+    #[test]
+    fn invalid_hex_string() {
+        // Setup
+        let hex_color = ColorConfig::HEXString(String::from("000FFF"));
+
+        // Act
+        let result = hex_color.to_image_rgba_color();
+
+        // Test
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn invalid_length_hex_string() {
+        // Setup
+        let hex_color = ColorConfig::HEXString(String::from("#000FFF1"));
+
+        // Act
+        let result = hex_color.to_image_rgba_color();
+
+        // Test
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn non_hex_to_rgba() {
+        // Setup
+        let hex_color = ColorConfig::RGB(ColorConfigRGB {
+            red: 1,
+            green: 2,
+            blue: 3
+        });
+
+        // Act
+        let color = hex_color.to_image_rgba_color().unwrap();
+
+        // Test
+        assert_eq!(color.0[0], 1);
+        assert_eq!(color.0[1], 2);
+        assert_eq!(color.0[2], 3);
+        assert_eq!(color.0[3], 0xFF);
     }
 }
