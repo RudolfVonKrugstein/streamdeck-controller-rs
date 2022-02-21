@@ -1,0 +1,71 @@
+defaults:
+  background_color: "#000000"
+  label_color: "#FFFFFF"
+  superLabel_color: "#FF0000"
+  sublabel_color:
+    red: 0
+    green: 0
+    blue: 255
+buttons:
+  - name: button1
+    up_face:
+      color: "#FF0000"
+      file: button1.png
+      label:
+        text: 1
+        color: "#00FF00"
+      sublabel:
+        text: below
+        color: "#0000FF"
+      superlabel: above
+    down_face:
+      color: "#0000FF"
+      file: button1.png
+      label:
+        text: 1
+        color: "#00FF00"
+      sublabel:
+        text: below
+        color: "#FF0000"
+      superlabel: above
+    down_handler:
+      file: button1_down.py
+    up_handler:
+      code: |
+        # python stuff
+pages:
+  - name: page1
+    buttons:
+      - position:
+          row: 0
+          col: 0
+        byname: button1
+      - position:
+          row: 0
+          col: 1
+        button:
+          up_face:
+            color: "#FF0000"
+            file: button1.png
+            label:
+              text: 1
+              color: "#00FF00"
+            sublabel:
+              text: below
+              color: "#0000FF"
+            superlabel: above
+          down_face:
+            color: "#0000FF"
+            file: button1.png
+            label:
+              text: 1
+              color: "#00FF00"
+            sublabel:
+              text: below
+              color: "#FF0000"
+            superlabel: above
+          down_handler:
+            file: button1_down.py
+          up_handler:
+            code: |
+              # python stuff
