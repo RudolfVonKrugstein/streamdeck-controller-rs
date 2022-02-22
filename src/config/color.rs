@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use crate::config::error;
+use serde::Deserialize;
 
 /// Color in the configuration.
 #[derive(Debug, Deserialize, PartialEq)]
@@ -17,9 +17,7 @@ impl ColorConfig {
         match self {
             ColorConfig::HEXString(hex) => {
                 if &hex[..1] != "#" {
-                    return Err(
-                        error::Error::InvalidColorHexString(hex.clone())
-                    );
+                    return Err(error::Error::InvalidColorHexString(hex.clone()));
                 }
                 let without_prefix = hex.trim_start_matches("#");
                 let num = u32::from_str_radix(without_prefix, 16)
@@ -28,20 +26,20 @@ impl ColorConfig {
                 match without_prefix.len() {
                     6 => Ok(image::Rgba([
                         (num >> 16) as u8,
-                        (num >> 8)  as u8,
+                        (num >> 8) as u8,
                         (num & 0xFF) as u8,
-                        255])),
+                        255,
+                    ])),
                     8 => Ok(image::Rgba([
                         (num >> 24) as u8,
                         (num >> 16) as u8,
                         (num >> 8) as u8,
-                        (num & 0xFF) as u8])),
-                    _ => Err(error::Error::InvalidColorHexString(hex.clone()))
+                        (num & 0xFF) as u8,
+                    ])),
+                    _ => Err(error::Error::InvalidColorHexString(hex.clone())),
                 }
-            },
-            ColorConfig::RGB(c) => {
-                Ok(image::Rgba([c.red, c.green, c.blue, 0xFF]))
             }
+            ColorConfig::RGB(c) => Ok(image::Rgba([c.red, c.green, c.blue, 0xFF])),
         }
     }
 }
@@ -148,7 +146,7 @@ mod tests {
         let hex_color = ColorConfig::RGB(ColorConfigRGB {
             red: 1,
             green: 2,
-            blue: 3
+            blue: 3,
         });
 
         // Act

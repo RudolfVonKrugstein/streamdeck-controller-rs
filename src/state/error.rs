@@ -1,5 +1,5 @@
-use std::io;
 use image::ImageError;
+use std::io;
 
 /// Possible errors that can occur during
 /// creation and handling of errors
@@ -8,5 +8,5 @@ use image::ImageError;
 pub enum Error {
     ImageOpeningError(io::Error),
     ImageEncodingError(ImageError),
-    ConfigError(crate::config::Error)
+    ConfigError(crate::config::Error),
 }

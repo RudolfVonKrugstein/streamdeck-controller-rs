@@ -1,6 +1,6 @@
-use image::Pixel;
-use crate::config;
 use super::error::Error;
+use crate::config;
+use image::Pixel;
 
 /// Face (picture) to be printed on a button.
 ///
@@ -15,7 +15,7 @@ impl ButtonFace {
     /// stuff in the configuration ([ButtonFaceConfig]).
     fn from_config(
         device_type: streamdeck_hid_rs::StreamDeckType,
-        face_config: &config::ButtonFaceConfig
+        face_config: &config::ButtonFaceConfig,
     ) -> Result<ButtonFace, Error> {
         // Start by creating the face (as rgba image
         // because we want to write rgba data on it).
@@ -25,15 +25,14 @@ impl ButtonFace {
         // Get the background color
         let back_color = match &face_config.color {
             None => image::Rgba([0, 0, 0, 255]),
-            Some(c) => c.to_image_rgba_color()
-                .map_err(|e| Error::ConfigError(e))?,
+            Some(c) => c.to_image_rgba_color().map_err(|e| Error::ConfigError(e))?,
         };
 
         // Draw on the background color on the face
         imageproc::drawing::draw_filled_rect_mut(
             &mut face,
-            imageproc::rect::Rect::at(0,0).of_size(width, height),
-            back_color
+            imageproc::rect::Rect::at(0, 0).of_size(width, height),
+            back_color,
         );
 
         // Draw the image!
@@ -46,13 +45,9 @@ impl ButtonFace {
                 &top_image,
                 width,
                 height,
-                image::imageops::FilterType::Lanczos3
+                image::imageops::FilterType::Lanczos3,
             );
-            image::imageops::overlay(
-                &mut face,
-                &top_image,
-                0, 0
-            );
+            image::imageops::overlay(&mut face, &top_image, 0, 0);
         }
 
         // Convert to rgb image
@@ -60,32 +55,16 @@ impl ButtonFace {
 
         // Draw the text on it
         if let Some(label_text) = &face_config.label {
-            draw_positioned_colored_text(
-                &mut face,
-                label_text,
-                TextPosition::Label
-            );
+            draw_positioned_colored_text(&mut face, label_text, TextPosition::Label);
         }
         if let Some(label_text) = &face_config.sublabel {
-            draw_positioned_colored_text(
-                &mut face,
-                label_text,
-                TextPosition::SubLabel
-            );
+            draw_positioned_colored_text(&mut face, label_text, TextPosition::SubLabel);
         }
         if let Some(label_text) = &face_config.superlabel {
-            draw_positioned_colored_text(
-                &mut face,
-                label_text,
-                TextPosition::SuperLabel
-            );
+            draw_positioned_colored_text(&mut face, label_text, TextPosition::SuperLabel);
         }
 
-        Ok(
-            ButtonFace {
-                face,
-                device_type}
-        )
+        Ok(ButtonFace { face, device_type })
     }
 }
 
@@ -97,20 +76,17 @@ fn find_text_scale(
     text: &str,
     font: &rusttype::Font,
     image_width: u32,
-    default_scale: f32) -> (rusttype::Scale, i32, i32) {
+    default_scale: f32,
+) -> (rusttype::Scale, i32, i32) {
     let max_width = image_width as f32 * 0.9;
 
-    let scale = rusttype::Scale::uniform(
-        default_scale
-    );
+    let scale = rusttype::Scale::uniform(default_scale);
 
     let (w, h) = imageproc::drawing::text_size(scale, &font, text);
     if w as f32 <= max_width {
         return (scale, w, h);
     }
-    let scale = rusttype::Scale::uniform(
-        default_scale * max_width/(w as f32)
-    );
+    let scale = rusttype::Scale::uniform(default_scale * max_width / (w as f32));
     let (w, h) = imageproc::drawing::text_size(scale, &font, text);
     (scale, w, h)
 }
@@ -119,7 +95,7 @@ fn find_text_scale(
 enum TextPosition {
     Label,
     SubLabel,
-    SuperLabel
+    SuperLabel,
 }
 
 /// Draw the positioned text on the button face.
@@ -135,12 +111,12 @@ fn draw_positioned_colored_text(
     // Find the color, defaulting to white
     let color = match label {
         config::LabelConfig::JustText(_) => image::Rgba([255, 255, 255, 255]),
-        config::LabelConfig::WithColor(c) =>
-            match &c.color {
-                None => image::Rgba([255, 255, 255, 255]),
-                Some(c) =>
-                    c.to_image_rgba_color().unwrap_or(image::Rgba([255, 255, 255, 255])),
-            }
+        config::LabelConfig::WithColor(c) => match &c.color {
+            None => image::Rgba([255, 255, 255, 255]),
+            Some(c) => c
+                .to_image_rgba_color()
+                .unwrap_or(image::Rgba([255, 255, 255, 255])),
+        },
     };
 
     let text = match label {
@@ -152,11 +128,11 @@ fn draw_positioned_colored_text(
         text.as_str(),
         &font,
         image.width(),
-        image.height() as f32 /
-            match position {
+        image.height() as f32
+            / match position {
                 TextPosition::Label => 1.1,
-                _ => 4.0
-            }
+                _ => 4.0,
+            },
     );
 
     let baseline = match position {
@@ -168,26 +144,24 @@ fn draw_positioned_colored_text(
     imageproc::drawing::draw_text_mut(
         image,
         color.to_rgb(),
-        (image.width() as i32 - w)/2,
-        baseline-h/2,
+        (image.width() as i32 - w) / 2,
+        baseline - h / 2,
         scale,
         &font,
-        text.as_str());
+        text.as_str(),
+    );
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::config::LabelConfigWithColor;
     use imageproc::assert_pixels_eq;
     use imageproc::drawing::Canvas;
     use streamdeck_hid_rs::StreamDeckType;
-    use crate::config::LabelConfigWithColor;
-    use super::*;
 
     // Helper function, count pixels with specific color
-    fn count_color_occurrences(
-        image: &image::RgbImage,
-        color: &image::Rgb<u8>
-    ) -> usize {
+    fn count_color_occurrences(image: &image::RgbImage, color: &image::Rgb<u8>) -> usize {
         let mut res = 0;
         for x in 0..image.width() {
             for y in 0..image.height() {
@@ -211,13 +185,20 @@ mod tests {
                 file: None,
                 label: None,
                 sublabel: None,
-                superlabel: None
-            }
-        ).unwrap();
+                superlabel: None,
+            },
+        )
+        .unwrap();
 
         // Test
-        assert_eq!(face.face.width(), StreamDeckType::Orig.button_image_size().0);
-        assert_eq!(face.face.height(), StreamDeckType::Orig.button_image_size().1);
+        assert_eq!(
+            face.face.width(),
+            StreamDeckType::Orig.button_image_size().0
+        );
+        assert_eq!(
+            face.face.height(),
+            StreamDeckType::Orig.button_image_size().1
+        );
     }
 
     #[test]
@@ -228,15 +209,14 @@ mod tests {
         let face = ButtonFace::from_config(
             streamdeck_hid_rs::StreamDeckType::Orig,
             &config::ButtonFaceConfig {
-                color: Some(config::ColorConfig::HEXString(
-                    String::from("#FF0000")
-                )),
+                color: Some(config::ColorConfig::HEXString(String::from("#FF0000"))),
                 file: None,
                 label: None,
                 sublabel: None,
-                superlabel: None
-            }
-        ).unwrap();
+                superlabel: None,
+            },
+        )
+        .unwrap();
 
         // Test
         let red_image = image::RgbImage::from_pixel(
@@ -244,10 +224,7 @@ mod tests {
             face.face.height(),
             image::Rgb([255, 0, 0]),
         );
-        assert_pixels_eq!(
-            face.face,
-            red_image
-        );
+        assert_pixels_eq!(face.face, red_image);
     }
 
     #[test]
@@ -260,15 +237,14 @@ mod tests {
         let mut face = ButtonFace::from_config(
             streamdeck_hid_rs::StreamDeckType::Orig,
             &config::ButtonFaceConfig {
-                color: Some(config::ColorConfig::HEXString(
-                    String::from("#FF0000")
-                )),
+                color: Some(config::ColorConfig::HEXString(String::from("#FF0000"))),
                 file: Some(String::from("./src/state/test_image_st_orig.png")),
                 label: None,
                 sublabel: None,
-                superlabel: None
-            }
-        ).unwrap();
+                superlabel: None,
+            },
+        )
+        .unwrap();
 
         // Test
         let mut red_image = image::RgbImage::from_pixel(
@@ -278,32 +254,12 @@ mod tests {
         );
         let (width, height) = (face.face.width(), face.face.height());
         assert_pixels_eq!(
-            image::imageops::crop(
-                &mut face.face,
-                0, 0,
-                width/2,
-                height,
-            ),
-            image::imageops::crop(
-                &mut back_image.to_rgb8(),
-                0, 0,
-                width/2,
-                height,
-            )
+            image::imageops::crop(&mut face.face, 0, 0, width / 2, height,),
+            image::imageops::crop(&mut back_image.to_rgb8(), 0, 0, width / 2, height,)
         );
         assert_pixels_eq!(
-            image::imageops::crop(
-                &mut face.face,
-                width/2, 0,
-                width/2,
-                height,
-            ),
-            image::imageops::crop(
-                &mut red_image,
-                width/2, 0,
-                width/2,
-                height,
-            )
+            image::imageops::crop(&mut face.face, width / 2, 0, width / 2, height,),
+            image::imageops::crop(&mut red_image, width / 2, 0, width / 2, height,)
         );
     }
 
@@ -317,22 +273,17 @@ mod tests {
         let mut face = ButtonFace::from_config(
             streamdeck_hid_rs::StreamDeckType::Orig,
             &config::ButtonFaceConfig {
-                color: Some(config::ColorConfig::HEXString(
-                    String::from("#FF0000")
-                )),
+                color: Some(config::ColorConfig::HEXString(String::from("#FF0000"))),
                 file: Some(String::from("./src/state/test_image_st_orig.png")),
                 label: None,
-                sublabel: Some(config::LabelConfig::WithColor(
-                    LabelConfigWithColor {
-                        color: Some(config::ColorConfig::HEXString(
-                            String::from("#FFFF00")
-                        )),
-                        text: String::from("AAAA")
-                    }
-                )),
+                sublabel: Some(config::LabelConfig::WithColor(LabelConfigWithColor {
+                    color: Some(config::ColorConfig::HEXString(String::from("#FFFF00"))),
+                    text: String::from("AAAA"),
+                })),
                 superlabel: None,
-            }
-        ).unwrap();
+            },
+        )
+        .unwrap();
 
         // Test
         // Top half of image is original!
@@ -343,37 +294,16 @@ mod tests {
         );
         let (width, height) = (face.face.width(), face.face.height());
         assert_pixels_eq!(
-            image::imageops::crop(
-                &mut face.face,
-                0, 0,
-                width/2,
-                height/2,
-            ),
-            image::imageops::crop(
-                &mut back_image.to_rgb8(),
-                0, 0,
-                width/2,
-                height/2,
-            )
+            image::imageops::crop(&mut face.face, 0, 0, width / 2, height / 2,),
+            image::imageops::crop(&mut back_image.to_rgb8(), 0, 0, width / 2, height / 2,)
         );
         assert_pixels_eq!(
-            image::imageops::crop(
-                &mut face.face,
-                width/2, 0,
-                width/2,
-                height/2,
-            ),
-            image::imageops::crop(
-                &mut red_image,
-                width/2, 0,
-                width/2,
-                height/2,
-            )
+            image::imageops::crop(&mut face.face, width / 2, 0, width / 2, height / 2,),
+            image::imageops::crop(&mut red_image, width / 2, 0, width / 2, height / 2,)
         );
         // Bottom of image should contain yellow pixels
-        more_asserts::assert_gt!(count_color_occurrences(
-            &face.face,
-            &image::Rgb([255, 255, 0])),
+        more_asserts::assert_gt!(
+            count_color_occurrences(&face.face, &image::Rgb([255, 255, 0])),
             5
         )
     }
@@ -388,22 +318,17 @@ mod tests {
         let mut face = ButtonFace::from_config(
             streamdeck_hid_rs::StreamDeckType::Orig,
             &config::ButtonFaceConfig {
-                color: Some(config::ColorConfig::HEXString(
-                    String::from("#FF0000")
-                )),
+                color: Some(config::ColorConfig::HEXString(String::from("#FF0000"))),
                 file: Some(String::from("./src/state/test_image_st_orig.png")),
                 label: None,
                 sublabel: None,
-                superlabel: Some(config::LabelConfig::WithColor(
-                    LabelConfigWithColor {
-                        color: Some(config::ColorConfig::HEXString(
-                            String::from("#FFFF00")
-                        )),
-                        text: String::from("AAAA")
-                    }
-                )),
-            }
-        ).unwrap();
+                superlabel: Some(config::LabelConfig::WithColor(LabelConfigWithColor {
+                    color: Some(config::ColorConfig::HEXString(String::from("#FFFF00"))),
+                    text: String::from("AAAA"),
+                })),
+            },
+        )
+        .unwrap();
 
         // Test
         // Bottom half of image is original!
@@ -414,37 +339,22 @@ mod tests {
         );
         let (width, height) = (face.face.width(), face.face.height());
         assert_pixels_eq!(
-            image::imageops::crop(
-                &mut face.face,
-                0, height/2,
-                width/2,
-                height/2,
-            ),
+            image::imageops::crop(&mut face.face, 0, height / 2, width / 2, height / 2,),
             image::imageops::crop(
                 &mut back_image.to_rgb8(),
-                0, height/2,
-                width/2,
-                height/2,
+                0,
+                height / 2,
+                width / 2,
+                height / 2,
             )
         );
         assert_pixels_eq!(
-            image::imageops::crop(
-                &mut face.face,
-                width/2, height/2,
-                width/2,
-                height/2,
-            ),
-            image::imageops::crop(
-                &mut red_image,
-                width/2, height/2,
-                width/2,
-                height/2,
-            )
+            image::imageops::crop(&mut face.face, width / 2, height / 2, width / 2, height / 2,),
+            image::imageops::crop(&mut red_image, width / 2, height / 2, width / 2, height / 2,)
         );
         // Top of image should contain yellow pixels
-        more_asserts::assert_gt!(count_color_occurrences(
-            &face.face,
-            &image::Rgb([255, 255, 0])),
+        more_asserts::assert_gt!(
+            count_color_occurrences(&face.face, &image::Rgb([255, 255, 0])),
             5
         )
     }

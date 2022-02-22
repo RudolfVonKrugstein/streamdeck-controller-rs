@@ -13,8 +13,8 @@ mod defaults;
 mod event_handler;
 mod label;
 pub use label::*;
-mod page;
 mod error;
+mod page;
 pub use error::*;
 
 /// The complete config for streamdeck-controller-rs
