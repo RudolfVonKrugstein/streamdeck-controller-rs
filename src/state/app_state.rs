@@ -88,4 +88,64 @@ impl AppState {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[ignore]
+    fn named_buttons_are_loaded_from_config() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore]
+    fn pages_are_loaded_from_config() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore]
+    fn correct_button_press_event_is_returned() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore]
+    fn correct_button_release_event_is_returned() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore]
+    fn initially_all_buttons_need_rendering() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore]
+    fn after_button_press_face_is_returned_for_rendering() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore]
+    fn after_button_release_face_is_returned_for_rendering() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore]
+    fn button_press_and_release_results_in_no_need_for_rendering() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore]
+    fn page_loading_results_in_face_for_new_button_returned_on_button_press() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore]
+    fn not_existing_page_loading_results_in_error() {
+        todo!()
+    }
 }
