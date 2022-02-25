@@ -1,3 +1,4 @@
+mod app_state;
 mod button;
 mod button_face;
 mod error;

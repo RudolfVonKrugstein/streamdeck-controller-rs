@@ -19,7 +19,7 @@ struct PositionedButtonSetup {
 }
 
 /// A page, that can be loaded!
-struct Page {
+pub struct Page {
     buttons: Vec<PositionedButtonSetup>,
 }
 
