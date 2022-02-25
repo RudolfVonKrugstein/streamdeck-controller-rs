@@ -7,6 +7,7 @@ use crate::state::button_face::ButtonFace;
 use crate::state::event_handler::EventHandler;
 use std::collections::HashMap;
 use std::rc::Rc;
+use streamdeck_hid_rs::StreamDeckType;
 
 /// The complete app state!
 struct AppState {
@@ -30,7 +31,24 @@ impl AppState {
     /// If the configuration is ok, the App state. Otherwise the error that occurred during
     /// creation of the state from the config.
     pub fn from_config(config: &config::Config) -> Result<AppState, Error> {
-        todo!()
+        let mut named_buttons: HashMap<String, Rc<ButtonSetup>> = HashMap::new();
+
+        if let Some(config_buttons) = &config.buttons {
+            for button_config in config_buttons {
+                named_buttons.insert(
+                    button_config.name.clone(),
+                    Rc::new(
+                        ButtonSetup::from_config(&StreamDeckType::Orig, &button_config).unwrap(),
+                    ),
+                );
+            }
+        }
+
+        Ok(AppState {
+            named_buttons,
+            pages: Default::default(),
+            buttons: vec![],
+        })
     }
 
     /// Button gets pressed
@@ -90,14 +108,33 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore]
     fn named_buttons_are_loaded_from_config() {
-        todo!()
+        // Setup
+        let config: config::Config = serde_yaml::from_str(
+            "\
+buttons:
+  - name: button1
+pages: []
+",
+        )
+        .unwrap();
+
+        // Act
+        let state = AppState::from_config(&config).unwrap();
+
+        //Test
+        assert!(state.named_buttons.get(&String::from("button1")).is_some());
     }
 
     #[test]
     #[ignore]
     fn pages_are_loaded_from_config() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore]
+    fn named_buttons_pages_appear_in_named_buttons() {
         todo!()
     }
 

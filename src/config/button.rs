@@ -5,21 +5,21 @@ use serde::Deserialize;
 /// Configuration of a button that must have a name
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct ButtonConfigWithName {
-    name: String,
-    up_face: Option<ButtonFaceConfig>,
-    down_face: Option<ButtonFaceConfig>,
-    up_handler: Option<EventHandlerConfig>,
-    down_handler: Option<EventHandlerConfig>,
+    pub name: String,
+    pub up_face: Option<ButtonFaceConfig>,
+    pub down_face: Option<ButtonFaceConfig>,
+    pub up_handler: Option<EventHandlerConfig>,
+    pub down_handler: Option<EventHandlerConfig>,
 }
 
 /// Configuration of a button that may have no name
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct ButtonConfigOptionalName {
-    name: Option<String>,
-    up_face: Option<ButtonFaceConfig>,
-    down_face: Option<ButtonFaceConfig>,
-    up_handler: Option<EventHandlerConfig>,
-    down_handler: Option<EventHandlerConfig>,
+    pub name: Option<String>,
+    pub up_face: Option<ButtonFaceConfig>,
+    pub down_face: Option<ButtonFaceConfig>,
+    pub up_handler: Option<EventHandlerConfig>,
+    pub down_handler: Option<EventHandlerConfig>,
 }
 
 /// Configuration of a button or just the name of a button

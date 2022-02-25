@@ -1,3 +1,5 @@
+use super::error::Error;
+use crate::config;
 use crate::state::button_face::ButtonFace;
 use crate::state::event_handler::EventHandler;
 use std::collections::HashMap;
@@ -12,6 +14,47 @@ pub struct ButtonSetup {
     down_face: Option<Rc<ButtonFace>>,
     up_handler: Option<Rc<EventHandler>>,
     down_handler: Option<Rc<EventHandler>>,
+}
+
+impl ButtonSetup {
+    /// Create Button Setup from configuration.
+    ///
+    /// # Arguments
+    ///
+    /// device_type - The type of Streamdeck for which this [ButtonSetup] is created.
+    /// config - The config to create the [ButtonSetup] from.
+    ///
+    /// # Return
+    ///
+    /// The created config, or the error if config could not be created.
+    pub fn from_config(
+        device_type: &streamdeck_hid_rs::StreamDeckType,
+        config: &config::ButtonConfigWithName,
+    ) -> Result<ButtonSetup, Error> {
+        // Create the members
+        let up_face = match &config.up_face {
+            None => None,
+            Some(f) => Some(Rc::new(ButtonFace::from_config(device_type, f)?)),
+        };
+        let down_face = match &config.down_face {
+            None => None,
+            Some(f) => Some(Rc::new(ButtonFace::from_config(device_type, f)?)),
+        };
+        let up_handler = match &config.up_handler {
+            None => None,
+            Some(e) => Some(Rc::new(EventHandler::from_config(e)?)),
+        };
+        let down_handler = match &config.down_handler {
+            None => None,
+            Some(e) => Some(Rc::new(EventHandler::from_config(e)?)),
+        };
+        Ok(ButtonSetup {
+            up_face,
+            down_face,
+            up_handler,
+            down_handler,
+        })
+    }
 }
 
 /// A button setup can either be referenced directly or via its name!

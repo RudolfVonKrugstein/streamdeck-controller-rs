@@ -1,6 +1,7 @@
 use serde::Deserialize;
 
 mod button;
+pub use button::*;
 mod button_face;
 pub use button_face::*;
 mod button_position;
@@ -11,6 +12,7 @@ mod color;
 pub use color::*;
 mod defaults;
 mod event_handler;
+pub use event_handler::*;
 mod label;
 pub use label::*;
 mod error;
@@ -20,9 +22,9 @@ pub use error::*;
 /// The complete config for streamdeck-controller-rs
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Config {
-    defaults: Option<defaults::DefaultsConfigSection>,
-    buttons: Option<Vec<button::ButtonConfigWithName>>,
-    pages: Vec<page::PageConfig>,
+    pub defaults: Option<defaults::DefaultsConfigSection>,
+    pub buttons: Option<Vec<button::ButtonConfigWithName>>,
+    pub pages: Vec<page::PageConfig>,
 }
 
 #[cfg(test)]
