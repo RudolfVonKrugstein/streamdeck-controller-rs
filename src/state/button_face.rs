@@ -13,8 +13,8 @@ pub struct ButtonFace {
 impl ButtonFace {
     /// Create a [ButtonFace] from the corresponding
     /// stuff in the configuration ([ButtonFaceConfig]).
-    fn from_config(
-        device_type: streamdeck_hid_rs::StreamDeckType,
+    pub fn from_config(
+        device_type: &streamdeck_hid_rs::StreamDeckType,
         face_config: &config::ButtonFaceConfig,
     ) -> Result<ButtonFace, Error> {
         // Start by creating the face (as rgba image
@@ -64,6 +64,7 @@ impl ButtonFace {
             draw_positioned_colored_text(&mut face, label_text, TextPosition::SuperLabel);
         }
 
+        let device_type = device_type.clone();
         Ok(ButtonFace { face, device_type })
     }
 }
@@ -179,7 +180,7 @@ mod tests {
 
         // Act
         let face = ButtonFace::from_config(
-            streamdeck_hid_rs::StreamDeckType::Orig,
+            &streamdeck_hid_rs::StreamDeckType::Orig,
             &config::ButtonFaceConfig {
                 color: None,
                 file: None,
@@ -207,7 +208,7 @@ mod tests {
 
         // Act
         let face = ButtonFace::from_config(
-            streamdeck_hid_rs::StreamDeckType::Orig,
+            &streamdeck_hid_rs::StreamDeckType::Orig,
             &config::ButtonFaceConfig {
                 color: Some(config::ColorConfig::HEXString(String::from("#FF0000"))),
                 file: None,
@@ -235,7 +236,7 @@ mod tests {
 
         // Act
         let mut face = ButtonFace::from_config(
-            streamdeck_hid_rs::StreamDeckType::Orig,
+            &streamdeck_hid_rs::StreamDeckType::Orig,
             &config::ButtonFaceConfig {
                 color: Some(config::ColorConfig::HEXString(String::from("#FF0000"))),
                 file: Some(String::from("./src/state/test_image_st_orig.png")),
@@ -271,7 +272,7 @@ mod tests {
 
         // Act
         let mut face = ButtonFace::from_config(
-            streamdeck_hid_rs::StreamDeckType::Orig,
+            &streamdeck_hid_rs::StreamDeckType::Orig,
             &config::ButtonFaceConfig {
                 color: Some(config::ColorConfig::HEXString(String::from("#FF0000"))),
                 file: Some(String::from("./src/state/test_image_st_orig.png")),
@@ -316,7 +317,7 @@ mod tests {
 
         // Act
         let mut face = ButtonFace::from_config(
-            streamdeck_hid_rs::StreamDeckType::Orig,
+            &streamdeck_hid_rs::StreamDeckType::Orig,
             &config::ButtonFaceConfig {
                 color: Some(config::ColorConfig::HEXString(String::from("#FF0000"))),
                 file: Some(String::from("./src/state/test_image_st_orig.png")),
