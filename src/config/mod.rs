@@ -5,6 +5,7 @@ pub use button::*;
 mod button_face;
 pub use button_face::*;
 mod button_position;
+pub use button_position::*;
 /// Load configuration file.
 ///
 /// See the (example config)[../../doc/example_config.yml].
