@@ -24,13 +24,17 @@ impl AppState {
     ///
     /// # Arguments
     ///
-    /// config - Loaded configations object
+    /// device_type - The type of Stremdeck device we create this for!
+    /// config - Loaded configurations object
     ///
     /// # Result
     ///
     /// If the configuration is ok, the App state. Otherwise the error that occurred during
     /// creation of the state from the config.
-    pub fn from_config(config: &config::Config) -> Result<AppState, Error> {
+    pub fn from_config(
+        device_type: &StreamDeckType,
+        config: &config::Config,
+    ) -> Result<AppState, Error> {
         let mut named_buttons: HashMap<String, Rc<ButtonSetup>> = HashMap::new();
 
         if let Some(config_buttons) = &config.buttons {
@@ -45,10 +49,24 @@ impl AppState {
             }
         }
 
+        let mut pages: HashMap<String, Rc<Page>> = HashMap::new();
+
+        for page_config in &config.pages {
+            let (page, more_named_buttons) =
+                Page::from_config_with_named_buttons(device_type, &page_config)?;
+            pages.insert(page_config.name.clone(), Rc::new(page));
+            named_buttons.extend(more_named_buttons);
+        }
+
+        let mut buttons = Vec::new();
+        for _ in 0..device_type.total_num_buttons() {
+            buttons.push(ButtonState::empty());
+        }
+
         Ok(AppState {
             named_buttons,
-            pages: Default::default(),
-            buttons: vec![],
+            pages,
+            buttons,
         })
     }
 
@@ -121,22 +139,72 @@ pages: []
         .unwrap();
 
         // Act
-        let state = AppState::from_config(&config).unwrap();
+        let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
 
         //Test
         assert!(state.named_buttons.get(&String::from("button1")).is_some());
     }
 
     #[test]
-    #[ignore]
     fn pages_are_loaded_from_config() {
-        todo!()
+        // Setup
+        let config: config::Config = serde_yaml::from_str(
+            "\
+pages:
+- name: page1
+  buttons: []
+",
+        )
+        .unwrap();
+
+        // Act
+        let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+
+        //Test
+        assert!(state.pages.get(&String::from("page1")).is_some());
     }
 
     #[test]
-    #[ignore]
-    fn named_buttons_pages_appear_in_named_buttons() {
-        todo!()
+    fn named_buttons_appear_in_named_buttons() {
+        // Setup
+        let config: config::Config = serde_yaml::from_str(
+            "\
+buttons:
+- name: button1
+pages: []
+",
+        )
+        .unwrap();
+
+        // Act
+        let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+
+        //Test
+        assert!(state.named_buttons.get(&String::from("button1")).is_some());
+    }
+
+    #[test]
+    fn named_buttons_in_page_appear_in_named_buttons() {
+        // Setup
+        let config: config::Config = serde_yaml::from_str(
+            "\
+pages:
+- name: page1
+  buttons:
+  - position:
+      row: 0
+      col: 0
+    button:
+      name: button1
+",
+        )
+        .unwrap();
+
+        // Act
+        let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+
+        //Test
+        assert!(state.named_buttons.get(&String::from("button1")).is_some());
     }
 
     #[test]

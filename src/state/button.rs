@@ -179,6 +179,14 @@ impl ButtonState {
         }
     }
 
+    pub fn empty() -> ButtonState {
+        ButtonState {
+            setup: ButtonSetupOrName::Name(String::from("empty")),
+            press_state: PressState::Up,
+            render_state: None,
+        }
+    }
+
     /// Sets the press state of the button
     pub fn set_pressed(
         &mut self,
