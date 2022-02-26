@@ -4,14 +4,14 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct PageConfig {
-    name: String,
-    buttons: Vec<PageButtonConfig>,
+    pub name: String,
+    pub buttons: Vec<PageButtonConfig>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct PageButtonConfig {
-    position: ButtonPositionConfig,
-    button: ButtonOrButtonName,
+    pub position: ButtonPositionConfig,
+    pub button: ButtonOrButtonName,
 }
 
 #[cfg(test)]
