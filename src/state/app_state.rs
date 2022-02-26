@@ -38,7 +38,8 @@ impl AppState {
                 named_buttons.insert(
                     button_config.name.clone(),
                     Rc::new(
-                        ButtonSetup::from_config(&StreamDeckType::Orig, &button_config).unwrap(),
+                        ButtonSetup::from_config_with_name(&StreamDeckType::Orig, &button_config)
+                            .unwrap(),
                     ),
                 );
             }
