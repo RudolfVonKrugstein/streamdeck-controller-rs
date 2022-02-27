@@ -144,36 +144,88 @@ impl AppState {
 mod tests {
     use super::*;
 
+    /// Returns a full config to be used in tests
+    ///
+    /// The config contains 1 page with all buttons!
+    fn get_full_config() -> config::Config {
+        let mut named_buttons = Vec::new();
+        for i in 0..5 {
+            named_buttons.push(config::ButtonConfigWithName {
+                name: format!("named_button{}", i),
+                up_face: Some(config::ButtonFaceConfig {
+                    color: Some(config::ColorConfig::HEXString("#FF0000".to_string())),
+                    file: None,
+                    label: None,
+                    sublabel: None,
+                    superlabel: None,
+                }),
+                down_face: None,
+                up_handler: Some(config::EventHandlerConfig::AsCode {
+                    code: format!("on_named_button_{}_up", i),
+                }),
+                down_handler: Some(config::EventHandlerConfig::AsCode {
+                    code: format!("on_named_button_{}_down", i),
+                }),
+            });
+        }
+
+        let mut page_buttons = Vec::new();
+        for i in 0..15 {
+            page_buttons.push(config::PageButtonConfig {
+                position: config::ButtonPositionConfig {
+                    row: i / 5,
+                    col: i % 5,
+                },
+                button: config::ButtonOrButtonName::Button(config::ButtonConfigOptionalName {
+                    name: Some(format!("page_button{}", i)),
+                    up_face: Some(config::ButtonFaceConfig {
+                        color: None,
+                        file: None,
+                        label: None,
+                        sublabel: None,
+                        superlabel: None,
+                    }),
+                    down_face: None,
+                    up_handler: Some(config::EventHandlerConfig::AsCode {
+                        code: format!("on_page_button_{}_up", i),
+                    }),
+                    down_handler: Some(config::EventHandlerConfig::AsCode {
+                        code: format!("on_page_button_{}_down", i),
+                    }),
+                }),
+            });
+        }
+        config::Config {
+            defaults: None,
+            buttons: Some(named_buttons),
+            pages: vec![config::PageConfig {
+                name: "page1".to_string(),
+                buttons: page_buttons,
+            }],
+        }
+    }
+
     #[test]
     fn named_buttons_are_loaded_from_config() {
         // Setup
-        let config: config::Config = serde_yaml::from_str(
-            "\
-buttons:
-  - name: button1
-pages: []
-",
-        )
-        .unwrap();
+        let config = get_full_config();
 
         // Act
         let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
 
         //Test
-        assert!(state.named_buttons.get(&String::from("button1")).is_some());
+        for i in 0..5 {
+            assert!(state
+                .named_buttons
+                .get(&format!("named_button{}", i))
+                .is_some());
+        }
     }
 
     #[test]
     fn pages_are_loaded_from_config() {
         // Setup
-        let config: config::Config = serde_yaml::from_str(
-            "\
-pages:
-- name: page1
-  buttons: []
-",
-        )
-        .unwrap();
+        let config = get_full_config();
 
         // Act
         let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -183,68 +235,26 @@ pages:
     }
 
     #[test]
-    fn named_buttons_appear_in_named_buttons() {
+    fn named_buttons_of_page_appear_in_named_buttons() {
         // Setup
-        let config: config::Config = serde_yaml::from_str(
-            "\
-buttons:
-- name: button1
-pages: []
-",
-        )
-        .unwrap();
+        let config = get_full_config();
 
         // Act
         let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
 
         //Test
-        assert!(state.named_buttons.get(&String::from("button1")).is_some());
-    }
-
-    #[test]
-    fn named_buttons_in_page_appear_in_named_buttons() {
-        // Setup
-        let config: config::Config = serde_yaml::from_str(
-            "\
-pages:
-- name: page1
-  buttons:
-  - position:
-      row: 0
-      col: 0
-    button:
-      name: button1
-",
-        )
-        .unwrap();
-
-        // Act
-        let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
-
-        //Test
-        assert!(state.named_buttons.get(&String::from("button1")).is_some());
+        for i in 0..15 {
+            assert!(state
+                .named_buttons
+                .get(&format!("page_button{}", i))
+                .is_some());
+        }
     }
 
     #[test]
     fn correct_button_press_and_release_events_are_returned() {
         // Setup
-        let config: config::Config = serde_yaml::from_str(
-            "\
-pages:
-- name: page1
-  buttons:
-  - position:
-      row: 0
-      col: -1
-    button:
-      name: button1
-      down_handler:
-        code: on_press
-      up_handler:
-        code: on_release
-",
-        )
-        .unwrap();
+        let config = get_full_config();
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -253,13 +263,13 @@ pages:
         let release_event = state.on_button_released(0).unwrap();
 
         //Test
-        assert_eq!(press_event.script, String::from("on_press"));
-        assert_eq!(release_event.script, String::from("on_release"));
+        assert_eq!(press_event.script, String::from("on_page_button_4_down"));
+        assert_eq!(release_event.script, String::from("on_page_button_4_up"));
     }
 
     #[test]
     #[ignore]
-    fn initially_all_buttons_need_rendering() {
+    fn after_loading_page_all_buttons_need_rendering() {
         todo!()
     }
 
