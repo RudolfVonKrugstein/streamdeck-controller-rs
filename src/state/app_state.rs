@@ -10,7 +10,7 @@ use std::rc::Rc;
 use streamdeck_hid_rs::StreamDeckType;
 
 /// The complete app state!
-struct AppState {
+pub struct AppState {
     /// Named buttons, that can be used and modified
     named_buttons: HashMap<String, Rc<ButtonSetup>>,
     /// Pages, that can be loaded
