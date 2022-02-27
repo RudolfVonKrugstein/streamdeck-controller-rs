@@ -11,7 +11,7 @@ serde_yaml = "~0"
 image = "0.23.6"
 imageproc = { git = "https://github.com/image-rs/imageproc" }
 rusttype = "~0"
-streamdeck-hid-rs = "~0"
+streamdeck-hid-rs = { git = "https://github.com/RudolfVonKrugstein/streamdeck-hid-rs" }
 hidapi = "~1"
 more-asserts = "~0"
 clap = { version = "~3", features = ["derive"] }
