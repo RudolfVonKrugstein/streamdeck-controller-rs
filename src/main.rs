@@ -48,7 +48,7 @@ fn main() {
     loop {
         let faces = app_state.set_rendered_and_get_rendering_faces();
         for (button_id, face) in faces {
-            device.set_button_image(button_id, &face.face);
+            device.set_button_image(button_id, &face.face).unwrap();
         }
 
         let e = receiver.recv().unwrap();
