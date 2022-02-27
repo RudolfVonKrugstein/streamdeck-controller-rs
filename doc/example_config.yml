@@ -6,6 +6,8 @@ defaults:
     red: 0
     green: 0
     blue: 255
+default_pages:
+  - page1
 buttons:
   - name: button1
     up_face:

@@ -124,12 +124,12 @@ impl AppState {
     ///
     /// List of tuples with the id of the button to be rendered and the ButtonFace that
     /// should be rendered on the button.
-    fn set_rendered_and_get_rendering_faces(&mut self) -> Vec<Rc<ButtonFace>> {
+    pub fn set_rendered_and_get_rendering_faces(&mut self) -> Vec<(u8, Rc<ButtonFace>)> {
         let mut result = Vec::new();
-        for mut button in &mut self.buttons {
+        for (id, mut button) in &mut self.buttons.iter().enumerate() {
             match button.set_rendered_and_get_face_for_rendering(&self.named_buttons) {
                 None => {}
-                Some(face) => result.push(face),
+                Some(face) => result.push((id as u8, face)),
             }
         }
         result
