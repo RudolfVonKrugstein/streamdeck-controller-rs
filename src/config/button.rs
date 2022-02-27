@@ -76,16 +76,14 @@ down_handler:
         );
         assert_eq!(
             deserialize.up_handler,
-            Some(EventHandlerConfig {
-                code: Some(String::from("print")),
-                file: None
+            Some(EventHandlerConfig::AsCode {
+                code: String::from("print")
             })
         );
         assert_eq!(
             deserialize.down_handler,
-            Some(EventHandlerConfig {
-                code: None,
-                file: Some(String::from("handler.py"))
+            Some(EventHandlerConfig::AsFile {
+                file: String::from("handler.py")
             })
         );
     }
@@ -132,16 +130,14 @@ down_handler:
         );
         assert_eq!(
             deserialize.up_handler,
-            Some(EventHandlerConfig {
-                code: Some(String::from("print")),
-                file: None
+            Some(EventHandlerConfig::AsCode {
+                code: String::from("print")
             })
         );
         assert_eq!(
             deserialize.down_handler,
-            Some(EventHandlerConfig {
-                code: None,
-                file: Some(String::from("handler.py"))
+            Some(EventHandlerConfig::AsFile {
+                file: String::from("handler.py")
             })
         );
     }
