@@ -126,10 +126,10 @@ impl AppState {
     /// should be rendered on the button.
     pub fn set_rendered_and_get_rendering_faces(&mut self) -> Vec<(u8, Rc<ButtonFace>)> {
         let mut result = Vec::new();
-        for (id, mut button) in &mut self.buttons.iter().enumerate() {
-            match button.set_rendered_and_get_face_for_rendering(&self.named_buttons) {
+        for id in 0..self.buttons.len() {
+            match self.buttons[id].set_rendered_and_get_face_for_rendering(&self.named_buttons) {
                 None => {}
-                Some(face) => result.push((id as u8, face)),
+                Some(face) => result.push((id as u8, face.clone())),
             }
         }
         result
