@@ -110,7 +110,14 @@ impl AppState {
     /// List of tuples with the id of the button to be rendered and the ButtonFace that
     /// should be rendered on the button.
     fn set_rendered_and_get_rendering_faces(&mut self) -> Vec<Rc<ButtonFace>> {
-        todo!()
+        let mut result = Vec::new();
+        for mut button in &mut self.buttons {
+            match button.set_rendered_and_get_face_for_rendering(&self.named_buttons) {
+                None => {}
+                Some(face) => result.push(face),
+            }
+        }
+        result
     }
 
     /// Loads a page, setting all the buttons.
@@ -268,9 +275,16 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn after_loading_page_all_buttons_need_rendering() {
-        todo!()
+        // Setup
+        let config = get_full_config();
+
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        state.load_page(String::from("page1")).unwrap();
+
+        // Test
+        assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 15);
     }
 
     #[test]
