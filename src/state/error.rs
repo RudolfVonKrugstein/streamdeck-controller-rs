@@ -11,4 +11,5 @@ pub enum Error {
     ConfigError(crate::config::Error),
     PageNotFound(String),
     LoadScriptFailed(std::io::Error),
+    DuplicateNamedButton(String),
 }

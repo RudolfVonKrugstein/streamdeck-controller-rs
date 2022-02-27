@@ -41,6 +41,9 @@ impl AppState {
 
         if let Some(config_buttons) = &config.buttons {
             for button_config in config_buttons {
+                if named_buttons.contains_key(&button_config.name) {
+                    return Err(Error::DuplicateNamedButton(button_config.name.clone()))
+                }
                 named_buttons.insert(
                     button_config.name.clone(),
                     Rc::new(
@@ -57,7 +60,12 @@ impl AppState {
             let (page, more_named_buttons) =
                 Page::from_config_with_named_buttons(device_type, &page_config)?;
             pages.insert(page_config.name.clone(), Rc::new(page));
-            named_buttons.extend(more_named_buttons);
+            for (name, new_named_button) in more_named_buttons {
+                if named_buttons.contains_key(&name) {
+                    return Err(Error::DuplicateNamedButton(name))
+                }
+                named_buttons.insert(name, new_named_button);
+            }
         }
 
         let mut buttons = Vec::new();
@@ -154,7 +162,7 @@ mod tests {
     /// Returns a full config to be used in tests
     ///
     /// The config contains 1 page with all buttons!
-    fn get_full_config() -> config::Config {
+    fn get_full_config(add_doubled_name_error: bool) -> config::Config {
         let mut named_buttons = Vec::new();
         for i in 0..5 {
             named_buttons.push(config::ButtonConfigWithName {
@@ -181,13 +189,22 @@ mod tests {
         for page_id in 0..3 {
             let mut page_buttons = Vec::new();
             for button_id in 0..15 {
+                if add_doubled_name_error {
+
+                }
+
                 page_buttons.push(config::PageButtonConfig {
                     position: config::ButtonPositionConfig {
                         row: button_id / 5,
                         col: button_id % 5,
                     },
                     button: config::ButtonOrButtonName::Button(config::ButtonConfigOptionalName {
-                        name: Some(format!("page{}_button{}", page_id, button_id)),
+                        name: Some(
+                            if add_doubled_name_error && button_id == 0 && page_id == 0
+                            { format!("named_button0") }
+                            else
+                            { format!("page{}_button{}", page_id, button_id) }
+                        ),
                         up_face: Some(config::ButtonFaceConfig {
                             color: None,
                             file: None,
@@ -220,9 +237,21 @@ mod tests {
     }
 
     #[test]
+    fn named_buttons_must_be_unique() {
+        // Setup
+        let mut config = get_full_config(true);
+
+        // Act
+        let result = AppState::from_config(&StreamDeckType::Orig, &config);
+
+        // Test
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn named_buttons_are_loaded_from_config() {
         // Setup
-        let config = get_full_config();
+        let config = get_full_config(false);
 
         // Act
         let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -239,7 +268,7 @@ mod tests {
     #[test]
     fn pages_are_loaded_from_config() {
         // Setup
-        let config = get_full_config();
+        let config = get_full_config(false);
 
         // Act
         let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -251,7 +280,7 @@ mod tests {
     #[test]
     fn named_buttons_of_page_appear_in_named_buttons() {
         // Setup
-        let config = get_full_config();
+        let config = get_full_config(false);
 
         // Act
         let state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -268,7 +297,7 @@ mod tests {
     #[test]
     fn correct_button_press_and_release_events_are_returned() {
         // Setup
-        let config = get_full_config();
+        let config = get_full_config(false);
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -284,7 +313,7 @@ mod tests {
     #[test]
     fn after_loading_page_all_buttons_need_rendering() {
         // Setup
-        let config = get_full_config();
+        let config = get_full_config(false);
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -297,7 +326,7 @@ mod tests {
     #[test]
     fn after_button_press_face_is_returned_for_rendering() {
         // Setup
-        let config = get_full_config();
+        let config = get_full_config(false);
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -312,7 +341,7 @@ mod tests {
     #[test]
     fn after_button_release_face_is_returned_for_rendering() {
         // Setup
-        let config = get_full_config();
+        let config = get_full_config(false);
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -328,7 +357,7 @@ mod tests {
     #[test]
     fn button_press_and_release_results_in_no_need_for_rendering() {
         // Setup
-        let config = get_full_config();
+        let config = get_full_config(false);
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -344,7 +373,7 @@ mod tests {
     #[test]
     fn page_loading_results_in_face_for_new_button_returned_on_button_press() {
         // Setup
-        let config = get_full_config();
+        let config = get_full_config(false);
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
@@ -358,7 +387,7 @@ mod tests {
     #[test]
     fn not_existing_page_loading_results_in_error() {
         // Setup
-        let config = get_full_config();
+        let config = get_full_config(false);
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
