@@ -52,7 +52,7 @@ mod tests {
         };
 
         // Act
-        let object =
+        let _object =
             PositionedButtonSetup::from_config_with_named_button(&StreamDeckType::Orig, &config)
                 .unwrap();
 

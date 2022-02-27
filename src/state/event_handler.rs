@@ -6,6 +6,7 @@ use std::fs;
 /// Event handler, that are executed when an event occurs
 ///
 /// For now its just dummy ...
+#[derive(Debug)]
 pub struct EventHandler {
     pub script: String,
 }

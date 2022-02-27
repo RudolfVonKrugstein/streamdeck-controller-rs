@@ -6,7 +6,7 @@ use image::Pixel;
 ///
 /// The face is pre-rendered into an image.
 pub struct ButtonFace {
-    device_type: streamdeck_hid_rs::StreamDeckType,
+    _device_type: streamdeck_hid_rs::StreamDeckType,
     pub face: image::RgbImage,
 }
 
@@ -25,7 +25,7 @@ impl ButtonFace {
         // Get the background color
         let back_color = match &face_config.color {
             None => image::Rgba([0, 0, 0, 255]),
-            Some(c) => c.to_image_rgba_color().map_err(|e| Error::ConfigError(e))?,
+            Some(c) => c.to_image_rgba_color().map_err(Error::ConfigError)?,
         };
 
         // Draw on the background color on the face
@@ -38,9 +38,9 @@ impl ButtonFace {
         // Draw the image!
         if let Some(path) = &face_config.file {
             let top_image = image::io::Reader::open(path)
-                .map_err(|e| Error::ImageOpeningError(e))?
+                .map_err(Error::ImageOpeningError)?
                 .decode()
-                .map_err(|e| Error::ImageEncodingError(e))?;
+                .map_err(Error::ImageEncodingError)?;
             let top_image = image::imageops::resize(
                 &top_image,
                 width,
@@ -55,17 +55,17 @@ impl ButtonFace {
 
         // Draw the text on it
         if let Some(label_text) = &face_config.label {
-            draw_positioned_colored_text(&mut face, label_text, TextPosition::Label);
+            draw_positioned_colored_text(&mut face, label_text, TextPosition::Center);
         }
         if let Some(label_text) = &face_config.sublabel {
-            draw_positioned_colored_text(&mut face, label_text, TextPosition::SubLabel);
+            draw_positioned_colored_text(&mut face, label_text, TextPosition::Sub);
         }
         if let Some(label_text) = &face_config.superlabel {
-            draw_positioned_colored_text(&mut face, label_text, TextPosition::SuperLabel);
+            draw_positioned_colored_text(&mut face, label_text, TextPosition::Super);
         }
 
         let device_type = device_type.clone();
-        Ok(ButtonFace { face, device_type })
+        Ok(ButtonFace { face, _device_type: device_type })
     }
 }
 
@@ -83,20 +83,20 @@ fn find_text_scale(
 
     let scale = rusttype::Scale::uniform(default_scale);
 
-    let (w, h) = imageproc::drawing::text_size(scale, &font, text);
+    let (w, h) = imageproc::drawing::text_size(scale, font, text);
     if w as f32 <= max_width {
         return (scale, w, h);
     }
     let scale = rusttype::Scale::uniform(default_scale * max_width / (w as f32));
-    let (w, h) = imageproc::drawing::text_size(scale, &font, text);
+    let (w, h) = imageproc::drawing::text_size(scale, font, text);
     (scale, w, h)
 }
 
 /// Possible positions of text.
 enum TextPosition {
-    Label,
-    SubLabel,
-    SuperLabel,
+    Center,
+    Sub,
+    Super,
 }
 
 /// Draw the positioned text on the button face.
@@ -104,7 +104,7 @@ fn draw_positioned_colored_text(
     image: &mut image::RgbImage,
     label: &config::LabelConfig,
     position: TextPosition,
-) -> () {
+) {
     // Font data
     let font_data: &[u8] = include_bytes!("../../assets/DejaVuSans.ttf");
     let font = rusttype::Font::try_from_vec(Vec::from(font_data)).unwrap();
@@ -131,15 +131,15 @@ fn draw_positioned_colored_text(
         image.width(),
         image.height() as f32
             / match position {
-                TextPosition::Label => 1.1,
+                TextPosition::Center => 1.1,
                 _ => 4.0,
             },
     );
 
     let baseline = match position {
-        TextPosition::Label => image.height() as f32 / 2.0,
-        TextPosition::SubLabel => image.height() as f32 * 4.0 / 5.0,
-        TextPosition::SuperLabel => image.height() as f32 / 5.0,
+        TextPosition::Center => image.height() as f32 / 2.0,
+        TextPosition::Sub => image.height() as f32 * 4.0 / 5.0,
+        TextPosition::Super => image.height() as f32 / 5.0,
     } as i32;
 
     imageproc::drawing::draw_text_mut(

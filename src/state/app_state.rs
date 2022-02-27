@@ -97,8 +97,8 @@ impl AppState {
     /// # Return
     ///
     /// Event handler, that should be executed as a result of the button press.
-    fn on_button_pressed(&mut self, button_id: usize) -> Option<Rc<EventHandler>> {
-        let mut button = self.buttons.get_mut(button_id)?;
+    pub fn on_button_pressed(&mut self, button_id: usize) -> Option<Rc<EventHandler>> {
+        let button = self.buttons.get_mut(button_id)?;
         button.set_pressed(&self.named_buttons)
     }
 
@@ -111,8 +111,8 @@ impl AppState {
     /// # Return
     ///
     /// Event handler, that should be executed as a result of the button release.
-    fn on_button_released(&mut self, button_id: usize) -> Option<Rc<EventHandler>> {
-        let mut button = self.buttons.get_mut(button_id)?;
+    pub fn on_button_released(&mut self, button_id: usize) -> Option<Rc<EventHandler>> {
+        let button = self.buttons.get_mut(button_id)?;
         button.set_released(&self.named_buttons)
     }
 
@@ -245,7 +245,7 @@ mod tests {
     #[test]
     fn named_buttons_must_be_unique() {
         // Setup
-        let mut config = get_full_config(true);
+        let config = get_full_config(true);
 
         // Act
         let result = AppState::from_config(&StreamDeckType::Orig, &config);

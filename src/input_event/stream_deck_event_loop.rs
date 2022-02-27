@@ -1,6 +1,6 @@
 use crate::InputEvent;
 use std::thread;
-use streamdeck_hid_rs::{ButtonEvent, ButtonState};
+use streamdeck_hid_rs::ButtonState;
 
 /// Starts a thread getting input events from the device
 /// and sending them via the [sender] object.

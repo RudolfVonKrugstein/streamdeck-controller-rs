@@ -1,6 +1,4 @@
 use crate::config;
-use crate::config::ButtonPositionConfig;
-use crate::state::button_position::PositionFromBorder::FromEnd;
 use streamdeck_hid_rs::StreamDeckType;
 
 /// Position on the Streamdeck (for row or col).
@@ -80,7 +78,6 @@ impl ButtonPosition {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde::de::Unexpected::Str;
 
     #[test]
     fn position_from_border_from_positive_index() {
@@ -116,7 +113,7 @@ mod tests {
     fn top_right_is_index_zero() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position = ButtonPosition::from_config(&ButtonPositionConfig { row: 0, col: -1 });
+            let position = ButtonPosition::from_config(&config::ButtonPositionConfig { row: 0, col: -1 });
             // Act
             let index = position.to_button_index(&device_type);
             // Test
@@ -128,7 +125,7 @@ mod tests {
     fn bottom_left_is_last_index() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position = ButtonPosition::from_config(&ButtonPositionConfig { row: -1, col: 0 });
+            let position = ButtonPosition::from_config(&&config::ButtonPositionConfig { row: -1, col: 0 });
             // Act
             let index = position.to_button_index(&device_type);
             // Test
@@ -140,7 +137,7 @@ mod tests {
     fn top_left_is_index_cols() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position = ButtonPosition::from_config(&ButtonPositionConfig { row: 0, col: 0 });
+            let position = ButtonPosition::from_config(&&config::ButtonPositionConfig { row: 0, col: 0 });
             // Act
             let index = position.to_button_index(&device_type);
             // Test
@@ -152,7 +149,7 @@ mod tests {
     fn bottom_right_is_last_index_minus_cols() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position = ButtonPosition::from_config(&ButtonPositionConfig { row: -1, col: -1 });
+            let position = ButtonPosition::from_config(&&config::ButtonPositionConfig { row: -1, col: -1 });
             // Act
             let index = position.to_button_index(&device_type);
             // Test
