@@ -227,6 +227,15 @@ impl ButtonState {
         }
     }
 
+    /// Sets/changes the setup for this button!
+    pub fn set_setup(&mut self, setup: &ButtonSetupOrName) {
+        self.setup = match setup {
+            ButtonSetupOrName::Name(name) => ButtonSetupOrName::Name(name.clone()),
+            ButtonSetupOrName::Setup(setup) => ButtonSetupOrName::Setup(Rc::clone(setup)),
+        };
+        self.render_state = None;
+    }
+
     /// Sets the button to rendered and gets the faced that has to be rendered
     /// # Return
     ///
@@ -423,6 +432,18 @@ mod tests {
         state.set_pressed(&named_buttons);
         state.set_rendered_and_get_face_for_rendering(&named_buttons);
         state.set_released(&named_buttons);
+
+        // Test
+        assert!(state.needs_rendering());
+    }
+
+    #[test]
+    fn when_changing_the_setup_rendering_is_needed_again() {
+        // Setup
+        let mut state = ButtonState::new(ButtonSetupOrName::Name("button".to_string()));
+
+        // Act
+        state.set_setup(&ButtonSetupOrName::Name("button2".to_string()));
 
         // Test
         assert!(state.needs_rendering());
