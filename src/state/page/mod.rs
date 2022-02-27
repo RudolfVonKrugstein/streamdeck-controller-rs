@@ -10,7 +10,7 @@ use streamdeck_hid_rs::StreamDeckType;
 
 /// A page, that can be loaded!
 pub struct Page {
-    buttons: Vec<PositionedButtonSetup>,
+    pub buttons: Vec<PositionedButtonSetup>,
 }
 
 impl Page {

@@ -8,8 +8,8 @@ use streamdeck_hid_rs::StreamDeckType;
 
 /// Setup of a button with position!
 pub struct PositionedButtonSetup {
-    position: ButtonPosition,
-    setup: ButtonSetupOrName,
+    pub position: ButtonPosition,
+    pub setup: ButtonSetupOrName,
 }
 
 impl PositionedButtonSetup {

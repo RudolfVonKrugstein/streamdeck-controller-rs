@@ -17,6 +17,8 @@ struct AppState {
     pages: HashMap<String, Rc<Page>>,
     /// The current loaded buttons
     buttons: Vec<ButtonState>,
+    /// The device type this is for!
+    device_type: StreamDeckType,
 }
 
 impl AppState {
@@ -67,6 +69,7 @@ impl AppState {
             named_buttons,
             pages,
             buttons,
+            device_type: device_type.clone(),
         })
     }
 
@@ -79,8 +82,9 @@ impl AppState {
     /// # Return
     ///
     /// Event handler, that should be executed as a result of the button press.
-    fn on_button_pressed(&mut self, button_id: u8) -> Option<EventHandler> {
-        todo!()
+    fn on_button_pressed(&mut self, button_id: usize) -> Option<Rc<EventHandler>> {
+        let mut button = self.buttons.get_mut(button_id)?;
+        button.set_pressed(&self.named_buttons)
     }
 
     /// Button gets released
@@ -92,8 +96,9 @@ impl AppState {
     /// # Return
     ///
     /// Event handler, that should be executed as a result of the button release.
-    fn on_button_released(&mut self, button_id: u8) -> Option<Rc<EventHandler>> {
-        todo!()
+    fn on_button_released(&mut self, button_id: usize) -> Option<Rc<EventHandler>> {
+        let mut button = self.buttons.get_mut(button_id)?;
+        button.set_released(&self.named_buttons)
     }
 
     /// Get all faces, that need rendering. Also sets all buttons do being rendered.
@@ -118,7 +123,20 @@ impl AppState {
     ///
     /// () if all went ok, Error if the page is not found.
     fn load_page(&mut self, page_name: String) -> Result<(), Error> {
-        todo!()
+        // Find the page
+        let page = self
+            .pages
+            .get(&page_name)
+            .ok_or(Error::PageNotFound(page_name))?;
+
+        // Load all the buttons
+        for button in &page.buttons {
+            self.buttons[button.position.to_button_index(&self.device_type)]
+                .set_setup(&button.setup);
+        }
+
+        // All went fine!
+        Ok(())
     }
 }
 
@@ -208,15 +226,35 @@ pages:
     }
 
     #[test]
-    #[ignore]
-    fn correct_button_press_event_is_returned() {
-        todo!()
-    }
+    fn correct_button_press_and_release_events_are_returned() {
+        // Setup
+        let config: config::Config = serde_yaml::from_str(
+            "\
+pages:
+- name: page1
+  buttons:
+  - position:
+      row: 0
+      col: -1
+    button:
+      name: button1
+      down_handler:
+        code: on_press
+      up_handler:
+        code: on_release
+",
+        )
+        .unwrap();
 
-    #[test]
-    #[ignore]
-    fn correct_button_release_event_is_returned() {
-        todo!()
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        state.load_page(String::from("page1")).unwrap();
+        let press_event = state.on_button_pressed(0).unwrap();
+        let release_event = state.on_button_released(0).unwrap();
+
+        //Test
+        assert_eq!(press_event.script, String::from("on_press"));
+        assert_eq!(release_event.script, String::from("on_release"));
     }
 
     #[test]
