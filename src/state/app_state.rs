@@ -42,7 +42,7 @@ impl AppState {
         if let Some(config_buttons) = &config.buttons {
             for button_config in config_buttons {
                 if named_buttons.contains_key(&button_config.name) {
-                    return Err(Error::DuplicateNamedButton(button_config.name.clone()))
+                    return Err(Error::DuplicateNamedButton(button_config.name.clone()));
                 }
                 named_buttons.insert(
                     button_config.name.clone(),
@@ -62,7 +62,7 @@ impl AppState {
             pages.insert(page_config.name.clone(), Rc::new(page));
             for (name, new_named_button) in more_named_buttons {
                 if named_buttons.contains_key(&name) {
-                    return Err(Error::DuplicateNamedButton(name))
+                    return Err(Error::DuplicateNamedButton(name));
                 }
                 named_buttons.insert(name, new_named_button);
             }
@@ -73,12 +73,19 @@ impl AppState {
             buttons.push(ButtonState::empty());
         }
 
-        Ok(AppState {
+        let mut result = AppState {
             named_buttons,
             pages,
             buttons,
             device_type: device_type.clone(),
-        })
+        };
+
+        if let Some(page_names) = &config.default_pages {
+            for page_name in page_names {
+                result.load_page(page_name)?;
+            }
+        }
+        Ok(result)
     }
 
     /// Button gets pressed
@@ -137,12 +144,12 @@ impl AppState {
     /// # Return
     ///
     /// () if all went ok, Error if the page is not found.
-    fn load_page(&mut self, page_name: String) -> Result<(), Error> {
+    fn load_page(&mut self, page_name: &String) -> Result<(), Error> {
         // Find the page
         let page = self
             .pages
-            .get(&page_name)
-            .ok_or(Error::PageNotFound(page_name))?;
+            .get(page_name)
+            .ok_or(Error::PageNotFound(page_name.clone()))?;
 
         // Load all the buttons
         for button in &page.buttons {
@@ -189,9 +196,7 @@ mod tests {
         for page_id in 0..3 {
             let mut page_buttons = Vec::new();
             for button_id in 0..15 {
-                if add_doubled_name_error {
-
-                }
+                if add_doubled_name_error {}
 
                 page_buttons.push(config::PageButtonConfig {
                     position: config::ButtonPositionConfig {
@@ -200,10 +205,11 @@ mod tests {
                     },
                     button: config::ButtonOrButtonName::Button(config::ButtonConfigOptionalName {
                         name: Some(
-                            if add_doubled_name_error && button_id == 0 && page_id == 0
-                            { format!("named_button0") }
-                            else
-                            { format!("page{}_button{}", page_id, button_id) }
+                            if add_doubled_name_error && button_id == 0 && page_id == 0 {
+                                format!("named_button0")
+                            } else {
+                                format!("page{}_button{}", page_id, button_id)
+                            },
                         ),
                         up_face: Some(config::ButtonFaceConfig {
                             color: None,
@@ -301,23 +307,22 @@ mod tests {
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
-        state.load_page(String::from("page1")).unwrap();
+        // Page0 is default and loaded!
         let press_event = state.on_button_pressed(0).unwrap();
         let release_event = state.on_button_released(0).unwrap();
 
         //Test
-        assert_eq!(press_event.script, String::from("on_page1_button4_down"));
-        assert_eq!(release_event.script, String::from("on_page1_button4_up"));
+        assert_eq!(press_event.script, String::from("on_page0_button4_down"));
+        assert_eq!(release_event.script, String::from("on_page0_button4_up"));
     }
 
     #[test]
-    fn after_loading_page_all_buttons_need_rendering() {
+    fn default_page_is_loaded_and_all_buttons_need_rendering() {
         // Setup
         let config = get_full_config(false);
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
-        state.load_page(String::from("page1")).unwrap();
 
         // Test
         assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 15);
@@ -330,7 +335,6 @@ mod tests {
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
-        state.load_page(String::from("page1")).unwrap();
         assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 15);
         state.on_button_pressed(0);
 
@@ -345,7 +349,6 @@ mod tests {
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
-        state.load_page(String::from("page1")).unwrap();
         state.on_button_pressed(0);
         state.set_rendered_and_get_rendering_faces();
         state.on_button_released(0);
@@ -361,7 +364,6 @@ mod tests {
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
-        state.load_page(String::from("page1")).unwrap();
         state.set_rendered_and_get_rendering_faces();
         state.on_button_pressed(0);
         state.on_button_released(0);
@@ -378,7 +380,7 @@ mod tests {
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
         state.set_rendered_and_get_rendering_faces();
-        let result = state.load_page(String::from("page1"));
+        state.load_page(&"page1".to_string()).unwrap();
 
         // Test
         assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 15);
@@ -391,7 +393,7 @@ mod tests {
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
-        let result = state.load_page(String::from("unkown_page"));
+        let result = state.load_page(&String::from("unkown_page"));
 
         // Test
         assert!(result.is_err());
