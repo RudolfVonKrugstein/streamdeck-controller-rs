@@ -9,4 +9,6 @@ pub enum Error {
     ImageOpeningError(io::Error),
     ImageEncodingError(ImageError),
     ConfigError(crate::config::Error),
+    PageNotFound(String),
+    LoadScriptFailed(std::io::Error),
 }
