@@ -27,6 +27,7 @@ pub struct Config {
     pub defaults: Option<defaults::DefaultsConfigSection>,
     pub buttons: Option<Vec<button::ButtonConfigWithName>>,
     pub pages: Vec<page::PageConfig>,
+    pub default_pages: Option<Vec<String>>,
 }
 
 #[cfg(test)]
