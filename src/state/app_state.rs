@@ -168,47 +168,54 @@ mod tests {
                 }),
                 down_face: None,
                 up_handler: Some(config::EventHandlerConfig::AsCode {
-                    code: format!("on_named_button_{}_up", i),
+                    code: format!("on_named_button{}_up", i),
                 }),
                 down_handler: Some(config::EventHandlerConfig::AsCode {
-                    code: format!("on_named_button_{}_down", i),
+                    code: format!("on_named_button{}_down", i),
                 }),
             });
         }
 
-        let mut page_buttons = Vec::new();
-        for i in 0..15 {
-            page_buttons.push(config::PageButtonConfig {
-                position: config::ButtonPositionConfig {
-                    row: i / 5,
-                    col: i % 5,
-                },
-                button: config::ButtonOrButtonName::Button(config::ButtonConfigOptionalName {
-                    name: Some(format!("page_button{}", i)),
-                    up_face: Some(config::ButtonFaceConfig {
-                        color: None,
-                        file: None,
-                        label: None,
-                        sublabel: None,
-                        superlabel: None,
+        let mut pages = Vec::new();
+
+        for page_id in 0..3 {
+            let mut page_buttons = Vec::new();
+            for button_id in 0..15 {
+                page_buttons.push(config::PageButtonConfig {
+                    position: config::ButtonPositionConfig {
+                        row: button_id / 5,
+                        col: button_id % 5,
+                    },
+                    button: config::ButtonOrButtonName::Button(config::ButtonConfigOptionalName {
+                        name: Some(format!("page{}_button{}", page_id, button_id)),
+                        up_face: Some(config::ButtonFaceConfig {
+                            color: None,
+                            file: None,
+                            label: None,
+                            sublabel: None,
+                            superlabel: None,
+                        }),
+                        down_face: None,
+                        up_handler: Some(config::EventHandlerConfig::AsCode {
+                            code: format!("on_page{}_button{}_up", page_id, button_id),
+                        }),
+                        down_handler: Some(config::EventHandlerConfig::AsCode {
+                            code: format!("on_page{}_button{}_down", page_id, button_id),
+                        }),
                     }),
-                    down_face: None,
-                    up_handler: Some(config::EventHandlerConfig::AsCode {
-                        code: format!("on_page_button_{}_up", i),
-                    }),
-                    down_handler: Some(config::EventHandlerConfig::AsCode {
-                        code: format!("on_page_button_{}_down", i),
-                    }),
-                }),
+                });
+            }
+            pages.push(config::PageConfig {
+                name: format!("page{}", page_id),
+                buttons: page_buttons,
             });
         }
+
         config::Config {
             defaults: None,
             buttons: Some(named_buttons),
-            pages: vec![config::PageConfig {
-                name: "page1".to_string(),
-                buttons: page_buttons,
-            }],
+            pages,
+            default_pages: Some(vec!["page0".to_string()]),
         }
     }
 
@@ -253,7 +260,7 @@ mod tests {
         for i in 0..15 {
             assert!(state
                 .named_buttons
-                .get(&format!("page_button{}", i))
+                .get(&format!("page1_button{}", i))
                 .is_some());
         }
     }
@@ -270,8 +277,8 @@ mod tests {
         let release_event = state.on_button_released(0).unwrap();
 
         //Test
-        assert_eq!(press_event.script, String::from("on_page_button_4_down"));
-        assert_eq!(release_event.script, String::from("on_page_button_4_up"));
+        assert_eq!(press_event.script, String::from("on_page1_button4_down"));
+        assert_eq!(release_event.script, String::from("on_page1_button4_up"));
     }
 
     #[test]
