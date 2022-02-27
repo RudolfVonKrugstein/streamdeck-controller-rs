@@ -288,32 +288,76 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn after_button_press_face_is_returned_for_rendering() {
-        todo!()
+        // Setup
+        let config = get_full_config();
+
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        state.load_page(String::from("page1")).unwrap();
+        assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 15);
+        state.on_button_pressed(0);
+
+        // Test
+        assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 1);
     }
 
     #[test]
-    #[ignore]
     fn after_button_release_face_is_returned_for_rendering() {
-        todo!()
+        // Setup
+        let config = get_full_config();
+
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        state.load_page(String::from("page1")).unwrap();
+        state.on_button_pressed(0);
+        state.set_rendered_and_get_rendering_faces();
+        state.on_button_released(0);
+
+        // Test
+        assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 1);
     }
 
     #[test]
-    #[ignore]
     fn button_press_and_release_results_in_no_need_for_rendering() {
-        todo!()
+        // Setup
+        let config = get_full_config();
+
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        state.load_page(String::from("page1")).unwrap();
+        state.set_rendered_and_get_rendering_faces();
+        state.on_button_pressed(0);
+        state.on_button_released(0);
+
+        // Test
+        assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 0);
     }
 
     #[test]
-    #[ignore]
     fn page_loading_results_in_face_for_new_button_returned_on_button_press() {
-        todo!()
+        // Setup
+        let config = get_full_config();
+
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        state.set_rendered_and_get_rendering_faces();
+        let result = state.load_page(String::from("page1"));
+
+        // Test
+        assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 15);
     }
 
     #[test]
-    #[ignore]
     fn not_existing_page_loading_results_in_error() {
-        todo!()
+        // Setup
+        let config = get_full_config();
+
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        let result = state.load_page(String::from("unkown_page"));
+
+        // Test
+        assert!(result.is_err());
     }
 }
