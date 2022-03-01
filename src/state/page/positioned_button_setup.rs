@@ -3,7 +3,7 @@ use super::super::button_position::ButtonPosition;
 use crate::config;
 use crate::state::button::ButtonSetup;
 use crate::state::error::Error;
-use std::rc::Rc;
+use std::sync::Arc;
 use streamdeck_hid_rs::StreamDeckType;
 
 /// Setup of a button with position!
@@ -30,7 +30,7 @@ impl PositionedButtonSetup {
     pub fn from_config_with_named_button(
         device_type: &StreamDeckType,
         config: &config::PageButtonConfig,
-    ) -> Result<(PositionedButtonSetup, Option<(String, Rc<ButtonSetup>)>), Error> {
+    ) -> Result<(PositionedButtonSetup, Option<(String, Arc<ButtonSetup>)>), Error> {
         let (setup, named_button) =
             ButtonSetupOrName::from_config_with_named_button(device_type, &config.button)?;
         let position = ButtonPosition::from_config(&config.position);

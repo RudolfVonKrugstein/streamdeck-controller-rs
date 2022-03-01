@@ -6,15 +6,15 @@ use crate::config;
 use crate::state::button_face::ButtonFace;
 use crate::state::event_handler::EventHandler;
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::Arc;
 use streamdeck_hid_rs::StreamDeckType;
 
 /// The complete app state!
 pub struct AppState {
     /// Named buttons, that can be used and modified
-    named_buttons: HashMap<String, Rc<ButtonSetup>>,
+    named_buttons: HashMap<String, Arc<ButtonSetup>>,
     /// Pages, that can be loaded
-    pages: HashMap<String, Rc<Page>>,
+    pages: HashMap<String, Arc<Page>>,
     /// The current loaded buttons
     buttons: Vec<ButtonState>,
     /// The device type this is for!
@@ -37,7 +37,7 @@ impl AppState {
         device_type: &StreamDeckType,
         config: &config::Config,
     ) -> Result<AppState, Error> {
-        let mut named_buttons: HashMap<String, Rc<ButtonSetup>> = HashMap::new();
+        let mut named_buttons: HashMap<String, Arc<ButtonSetup>> = HashMap::new();
 
         if let Some(config_buttons) = &config.buttons {
             for button_config in config_buttons {
@@ -46,7 +46,7 @@ impl AppState {
                 }
                 named_buttons.insert(
                     button_config.name.clone(),
-                    Rc::new(
+                    Arc::new(
                         ButtonSetup::from_config_with_name(&StreamDeckType::Orig, &button_config)
                             .unwrap(),
                     ),
@@ -54,12 +54,12 @@ impl AppState {
             }
         }
 
-        let mut pages: HashMap<String, Rc<Page>> = HashMap::new();
+        let mut pages: HashMap<String, Arc<Page>> = HashMap::new();
 
         for page_config in &config.pages {
             let (page, more_named_buttons) =
                 Page::from_config_with_named_buttons(device_type, &page_config)?;
-            pages.insert(page_config.name.clone(), Rc::new(page));
+            pages.insert(page_config.name.clone(), Arc::new(page));
             for (name, new_named_button) in more_named_buttons {
                 if named_buttons.contains_key(&name) {
                     return Err(Error::DuplicateNamedButton(name));
@@ -97,7 +97,7 @@ impl AppState {
     /// # Return
     ///
     /// Event handler, that should be executed as a result of the button press.
-    pub fn on_button_pressed(&mut self, button_id: usize) -> Option<Rc<EventHandler>> {
+    pub fn on_button_pressed(&mut self, button_id: usize) -> Option<Arc<EventHandler>> {
         let button = self.buttons.get_mut(button_id)?;
         button.set_pressed(&self.named_buttons)
     }
@@ -111,7 +111,7 @@ impl AppState {
     /// # Return
     ///
     /// Event handler, that should be executed as a result of the button release.
-    pub fn on_button_released(&mut self, button_id: usize) -> Option<Rc<EventHandler>> {
+    pub fn on_button_released(&mut self, button_id: usize) -> Option<Arc<EventHandler>> {
         let button = self.buttons.get_mut(button_id)?;
         button.set_released(&self.named_buttons)
     }
@@ -124,7 +124,7 @@ impl AppState {
     ///
     /// List of tuples with the id of the button to be rendered and the ButtonFace that
     /// should be rendered on the button.
-    pub fn set_rendered_and_get_rendering_faces(&mut self) -> Vec<(u8, Rc<ButtonFace>)> {
+    pub fn set_rendered_and_get_rendering_faces(&mut self) -> Vec<(u8, Arc<ButtonFace>)> {
         let mut result = Vec::new();
         for id in 0..self.buttons.len() {
             match self.buttons[id].set_rendered_and_get_face_for_rendering(&self.named_buttons) {

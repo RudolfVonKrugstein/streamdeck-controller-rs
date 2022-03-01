@@ -5,7 +5,7 @@ use super::error::Error;
 use crate::config;
 use crate::state::button::ButtonSetup;
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::Arc;
 use streamdeck_hid_rs::StreamDeckType;
 
 /// A page, that can be loaded!
@@ -19,7 +19,7 @@ impl Page {
     pub fn from_config_with_named_buttons(
         device_type: &StreamDeckType,
         config: &config::PageConfig,
-    ) -> Result<(Page, HashMap<String, Rc<ButtonSetup>>), Error> {
+    ) -> Result<(Page, HashMap<String, Arc<ButtonSetup>>), Error> {
         let mut buttons = Vec::new();
         let mut named_buttons = HashMap::new();
 
