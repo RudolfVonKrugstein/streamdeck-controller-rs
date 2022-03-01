@@ -1,10 +1,12 @@
 mod config;
 mod input_event;
+mod script_engine;
 mod state;
 
 use crate::input_event::{run_input_loop_thread, InputEvent};
 use crate::state::AppState;
 use clap::Parser;
+use pyo3::Python;
 use std::fs::File;
 use std::sync::Arc;
 
@@ -62,5 +64,11 @@ fn main() {
             }
         };
         println!("{:?}, {:?}", e, handler);
+
+        if let Some(event_handler) = handler {
+            let engine = crate::script_engine::PythonEngine::new();
+
+            engine.run_event_handler(&event_handler).unwrap();
+        }
     }
 }

@@ -5,4 +5,5 @@ mod button_face;
 mod button_position;
 mod error;
 mod event_handler;
+pub use event_handler::*;
 mod page;
