@@ -53,8 +53,12 @@ fn main() {
 
         let e = receiver.recv().unwrap();
         let handler = match e {
-            InputEvent::ButtonDownEvent(button_id) => app_state.on_button_pressed(button_id as usize),
-            InputEvent::ButtonUpEvent(button_id) => app_state.on_button_released(button_id as usize),
+            InputEvent::ButtonDownEvent(button_id) => {
+                app_state.on_button_pressed(button_id as usize)
+            }
+            InputEvent::ButtonUpEvent(button_id) => {
+                app_state.on_button_released(button_id as usize)
+            }
         };
         println!("{:?}, {:?}", e, handler);
     }

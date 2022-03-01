@@ -65,7 +65,10 @@ impl ButtonFace {
         }
 
         let device_type = device_type.clone();
-        Ok(ButtonFace { face, _device_type: device_type })
+        Ok(ButtonFace {
+            face,
+            _device_type: device_type,
+        })
     }
 }
 

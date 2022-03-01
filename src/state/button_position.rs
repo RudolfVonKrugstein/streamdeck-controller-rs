@@ -113,7 +113,8 @@ mod tests {
     fn top_right_is_index_zero() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position = ButtonPosition::from_config(&config::ButtonPositionConfig { row: 0, col: -1 });
+            let position =
+                ButtonPosition::from_config(&config::ButtonPositionConfig { row: 0, col: -1 });
             // Act
             let index = position.to_button_index(&device_type);
             // Test
@@ -125,7 +126,8 @@ mod tests {
     fn bottom_left_is_last_index() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position = ButtonPosition::from_config(&&config::ButtonPositionConfig { row: -1, col: 0 });
+            let position =
+                ButtonPosition::from_config(&&config::ButtonPositionConfig { row: -1, col: 0 });
             // Act
             let index = position.to_button_index(&device_type);
             // Test
@@ -137,7 +139,8 @@ mod tests {
     fn top_left_is_index_cols() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position = ButtonPosition::from_config(&&config::ButtonPositionConfig { row: 0, col: 0 });
+            let position =
+                ButtonPosition::from_config(&&config::ButtonPositionConfig { row: 0, col: 0 });
             // Act
             let index = position.to_button_index(&device_type);
             // Test
@@ -149,7 +152,8 @@ mod tests {
     fn bottom_right_is_last_index_minus_cols() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position = ButtonPosition::from_config(&&config::ButtonPositionConfig { row: -1, col: -1 });
+            let position =
+                ButtonPosition::from_config(&&config::ButtonPositionConfig { row: -1, col: -1 });
             // Act
             let index = position.to_button_index(&device_type);
             // Test
