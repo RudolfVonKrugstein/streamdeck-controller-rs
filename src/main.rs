@@ -6,6 +6,7 @@ use crate::input_event::{run_input_loop_thread, InputEvent};
 use crate::state::AppState;
 use clap::Parser;
 use std::fs::File;
+use std::sync::Arc;
 
 /// Command line arguments.
 ///
@@ -26,7 +27,7 @@ fn main() {
 
     // Detect and open the streamdeck device!
     let hid = hidapi::HidApi::new().unwrap();
-    let device = streamdeck_hid_rs::StreamDeckDevice::open_first_device(&hid).unwrap();
+    let device = Arc::new(streamdeck_hid_rs::StreamDeckDevice::open_first_device(&hid).unwrap());
     device.reset().unwrap();
 
     // Initialize the app state
@@ -42,7 +43,7 @@ fn main() {
     ) = std::sync::mpsc::channel();
 
     // Run streamdeck input event thread
-    run_input_loop_thread(&hid, sender.clone()).unwrap();
+    run_input_loop_thread(device.clone(), sender.clone()).unwrap();
 
     // Receive events!
     loop {
