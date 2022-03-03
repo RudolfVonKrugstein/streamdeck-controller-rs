@@ -46,6 +46,7 @@ mod tests {
         // Setup
         let config = config::PageConfig {
             name: String::from("page1"),
+            on_app: None,
             buttons: Vec::from([
                 config::PageButtonConfig {
                     position: config::ButtonPositionConfig { row: 0, col: 0 },
@@ -78,6 +79,7 @@ mod tests {
         // Setup
         let config = config::PageConfig {
             name: String::from("page1"),
+            on_app: None,
             buttons: Vec::from([config::PageButtonConfig {
                 position: config::ButtonPositionConfig { row: 0, col: 0 },
                 button: config::ButtonOrButtonName::Button(config::ButtonConfigOptionalName {

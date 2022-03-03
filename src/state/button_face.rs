@@ -298,7 +298,8 @@ mod tests {
         let (width, height) = (face.face.width(), face.face.height());
         assert_pixels_eq!(
             image::imageops::crop(&mut face.face, 0, 0, width / 2, height / 2,).to_image(),
-            image::imageops::crop(&mut back_image.to_rgb8(), 0, 0, width / 2, height / 2,).to_image()
+            image::imageops::crop(&mut back_image.to_rgb8(), 0, 0, width / 2, height / 2,)
+                .to_image()
         );
         assert_pixels_eq!(
             image::imageops::crop(&mut face.face, width / 2, 0, width / 2, height / 2,).to_image(),
@@ -349,11 +350,14 @@ mod tests {
                 height / 2,
                 width / 2,
                 height / 2,
-            ).to_image()
+            )
+            .to_image()
         );
         assert_pixels_eq!(
-            image::imageops::crop(&mut face.face, width / 2, height / 2, width / 2, height / 2,).to_image(),
-            image::imageops::crop(&mut red_image, width / 2, height / 2, width / 2, height / 2,).to_image()
+            image::imageops::crop(&mut face.face, width / 2, height / 2, width / 2, height / 2,)
+                .to_image(),
+            image::imageops::crop(&mut red_image, width / 2, height / 2, width / 2, height / 2,)
+                .to_image()
         );
         // Top of image should contain yellow pixels
         more_asserts::assert_gt!(

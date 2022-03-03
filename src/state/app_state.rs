@@ -229,6 +229,7 @@ mod tests {
                 });
             }
             pages.push(config::PageConfig {
+                on_app: None,
                 name: format!("page{}", page_id),
                 buttons: page_buttons,
             });

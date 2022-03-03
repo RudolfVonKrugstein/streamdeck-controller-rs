@@ -18,7 +18,10 @@ mod label;
 pub use label::*;
 mod error;
 pub use error::*;
+mod foreground_window_condition;
 mod page;
+pub use foreground_window_condition::*;
+
 pub use page::*;
 
 /// The complete config for streamdeck-controller-rs
