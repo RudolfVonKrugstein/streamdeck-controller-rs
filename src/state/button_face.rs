@@ -161,7 +161,6 @@ mod tests {
     use super::*;
     use crate::config::LabelConfigWithColor;
     use imageproc::assert_pixels_eq;
-    use imageproc::drawing::Canvas;
     use streamdeck_hid_rs::StreamDeckType;
 
     // Helper function, count pixels with specific color
@@ -258,12 +257,12 @@ mod tests {
         );
         let (width, height) = (face.face.width(), face.face.height());
         assert_pixels_eq!(
-            image::imageops::crop(&mut face.face, 0, 0, width / 2, height,),
-            image::imageops::crop(&mut back_image.to_rgb8(), 0, 0, width / 2, height,)
+            image::imageops::crop(&mut face.face, 0, 0, width / 2, height,).to_image(),
+            image::imageops::crop(&mut back_image.to_rgb8(), 0, 0, width / 2, height,).to_image()
         );
         assert_pixels_eq!(
-            image::imageops::crop(&mut face.face, width / 2, 0, width / 2, height,),
-            image::imageops::crop(&mut red_image, width / 2, 0, width / 2, height,)
+            image::imageops::crop(&mut face.face, width / 2, 0, width / 2, height,).to_image(),
+            image::imageops::crop(&mut red_image, width / 2, 0, width / 2, height,).to_image()
         );
     }
 
@@ -298,12 +297,12 @@ mod tests {
         );
         let (width, height) = (face.face.width(), face.face.height());
         assert_pixels_eq!(
-            image::imageops::crop(&mut face.face, 0, 0, width / 2, height / 2,),
-            image::imageops::crop(&mut back_image.to_rgb8(), 0, 0, width / 2, height / 2,)
+            image::imageops::crop(&mut face.face, 0, 0, width / 2, height / 2,).to_image(),
+            image::imageops::crop(&mut back_image.to_rgb8(), 0, 0, width / 2, height / 2,).to_image()
         );
         assert_pixels_eq!(
-            image::imageops::crop(&mut face.face, width / 2, 0, width / 2, height / 2,),
-            image::imageops::crop(&mut red_image, width / 2, 0, width / 2, height / 2,)
+            image::imageops::crop(&mut face.face, width / 2, 0, width / 2, height / 2,).to_image(),
+            image::imageops::crop(&mut red_image, width / 2, 0, width / 2, height / 2,).to_image()
         );
         // Bottom of image should contain yellow pixels
         more_asserts::assert_gt!(
@@ -343,18 +342,18 @@ mod tests {
         );
         let (width, height) = (face.face.width(), face.face.height());
         assert_pixels_eq!(
-            image::imageops::crop(&mut face.face, 0, height / 2, width / 2, height / 2,),
+            image::imageops::crop(&mut face.face, 0, height / 2, width / 2, height / 2,).to_image(),
             image::imageops::crop(
                 &mut back_image.to_rgb8(),
                 0,
                 height / 2,
                 width / 2,
                 height / 2,
-            )
+            ).to_image()
         );
         assert_pixels_eq!(
-            image::imageops::crop(&mut face.face, width / 2, height / 2, width / 2, height / 2,),
-            image::imageops::crop(&mut red_image, width / 2, height / 2, width / 2, height / 2,)
+            image::imageops::crop(&mut face.face, width / 2, height / 2, width / 2, height / 2,).to_image(),
+            image::imageops::crop(&mut red_image, width / 2, height / 2, width / 2, height / 2,).to_image()
         );
         // Top of image should contain yellow pixels
         more_asserts::assert_gt!(
