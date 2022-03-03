@@ -160,11 +160,35 @@ impl AppState {
         // All went fine!
         Ok(())
     }
+
+    /// React to a foreground window
+    pub fn on_foreground_window(
+        &mut self,
+        title: &String,
+        executable: &String,
+    ) -> Result<(), Error> {
+        let mut pages_to_load = Vec::new();
+
+        for (page_name, page) in &self.pages {
+            for condition in &page.on_foreground_window {
+                if condition.matches(title, executable) {
+                    pages_to_load.push(page_name.clone());
+                }
+            }
+        }
+
+        for page_name in pages_to_load {
+            self.load_page(&page_name)?;
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::ForegroundWindowConditionConfig;
 
     /// Returns a full config to be used in tests
     ///
@@ -229,7 +253,10 @@ mod tests {
                 });
             }
             pages.push(config::PageConfig {
-                on_app: None,
+                on_app: Some(vec![ForegroundWindowConditionConfig {
+                    executable: Some(format!("{}_exec", page_id)),
+                    title: Some(format!("{}_title", page_id)),
+                }]),
                 name: format!("page{}", page_id),
                 buttons: page_buttons,
             });
@@ -398,5 +425,39 @@ mod tests {
 
         // Test
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn load_page_on_window_title() {
+        // Setup
+        let config = get_full_config(false);
+
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        state.on_foreground_window(
+            &String::from("This is a title for loading page2_title page"),
+            &String::from("Some executable we don't care about"),
+        );
+
+        // Test
+        assert!(false);
+    }
+
+    #[test]
+    fn load_page_on_window_executable() {
+        // Setup
+        let config = get_full_config(false);
+
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        state
+            .on_foreground_window(
+                &String::from("This is a title for we don't care about"),
+                &String::from("/usr/bin/page2_exec"),
+            )
+            .unwrap();
+
+        // Test
+        assert!(false);
     }
 }

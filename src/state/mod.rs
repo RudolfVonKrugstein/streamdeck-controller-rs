@@ -6,4 +6,5 @@ mod button_position;
 mod error;
 mod event_handler;
 pub use event_handler::*;
+mod foreground_window_condition;
 mod page;

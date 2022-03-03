@@ -1176,6 +1176,7 @@ dependencies = [
  "imageproc",
  "more-asserts",
  "pyo3",
+ "regex",
  "rusttype",
  "serde",
  "serde_yaml",

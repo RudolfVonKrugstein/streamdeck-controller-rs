@@ -4,6 +4,7 @@ use positioned_button_setup::*;
 use super::error::Error;
 use crate::config;
 use crate::state::button::ButtonSetup;
+use crate::state::foreground_window_condition::ForegroundWindowCondition;
 use std::collections::HashMap;
 use std::sync::Arc;
 use streamdeck_hid_rs::StreamDeckType;
@@ -11,6 +12,7 @@ use streamdeck_hid_rs::StreamDeckType;
 /// A page, that can be loaded!
 pub struct Page {
     pub buttons: Vec<PositionedButtonSetup>,
+    pub on_foreground_window: Vec<ForegroundWindowCondition>,
 }
 
 impl Page {
@@ -22,6 +24,16 @@ impl Page {
     ) -> Result<(Page, HashMap<String, Arc<ButtonSetup>>), Error> {
         let mut buttons = Vec::new();
         let mut named_buttons = HashMap::new();
+        let on_foreground_window = match &config.on_app {
+            None => Vec::new(),
+            Some(configs) => {
+                let mut l = Vec::new();
+                for c in configs {
+                    l.push(ForegroundWindowCondition::from_config(&c)?);
+                }
+                l
+            }
+        };
 
         for button_config in &config.buttons {
             let (button, named_button) =
@@ -32,7 +44,13 @@ impl Page {
             }
         }
 
-        Ok((Page { buttons }, named_buttons))
+        Ok((
+            Page {
+                on_foreground_window,
+                buttons,
+            },
+            named_buttons,
+        ))
     }
 }
 

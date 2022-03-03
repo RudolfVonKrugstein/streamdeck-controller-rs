@@ -12,4 +12,5 @@ pub enum Error {
     PageNotFound(String),
     LoadScriptFailed(std::io::Error),
     DuplicateNamedButton(String),
+    RegexError(regex::Error),
 }
