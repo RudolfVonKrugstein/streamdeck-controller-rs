@@ -1,12 +1,14 @@
 mod config;
+mod foreground_window;
 mod input_event;
 mod script_engine;
 mod state;
 
-use crate::input_event::{run_input_loop_thread, InputEvent};
+use crate::input_event::{
+    run_foreground_window_event_loop_thread, run_input_loop_thread, InputEvent,
+};
 use crate::state::AppState;
 use clap::Parser;
-use pyo3::Python;
 use std::fs::File;
 use std::sync::Arc;
 
@@ -47,6 +49,9 @@ fn main() {
     // Run streamdeck input event thread
     run_input_loop_thread(device.clone(), sender.clone()).unwrap();
 
+    // Run forground window event thread
+    run_foreground_window_event_loop_thread(sender.clone()).unwrap();
+
     // Receive events!
     loop {
         let faces = app_state.set_rendered_and_get_rendering_faces();
@@ -62,8 +67,13 @@ fn main() {
             InputEvent::ButtonUpEvent(button_id) => {
                 app_state.on_button_released(button_id as usize)
             }
+            InputEvent::ForegroundWindow(title, executable) => {
+                // So something
+                println!("Title: {}, exec: {}", title, executable);
+                None
+            }
         };
-        println!("{:?}, {:?}", e, handler);
+        println!("{:?}", handler);
 
         if let Some(event_handler) = handler {
             let engine = crate::script_engine::PythonEngine::new();

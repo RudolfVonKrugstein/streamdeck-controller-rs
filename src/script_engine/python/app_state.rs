@@ -1,5 +1,4 @@
 use pyo3::prelude::*;
-use std::sync::RwLock;
 
 /// Class for wrapping the app state to be used from python
 #[pyclass]
