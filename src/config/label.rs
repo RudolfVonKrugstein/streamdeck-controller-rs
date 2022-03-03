@@ -4,12 +4,14 @@ use serde::Deserialize;
 /// A label that can be placed on a button.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(untagged)]
+#[serde(deny_unknown_fields)]
 pub enum LabelConfig {
     JustText(String),
     WithColor(LabelConfigWithColor),
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct LabelConfigWithColor {
     pub color: Option<ColorConfig>,
     pub text: String,

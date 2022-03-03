@@ -4,6 +4,7 @@ use serde::Deserialize;
 /// Color in the configuration.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(untagged)]
+#[serde(deny_unknown_fields)]
 pub enum ColorConfig {
     /// The color, when it is provided as an HEX string (example #FF0000)
     HEXString(String),

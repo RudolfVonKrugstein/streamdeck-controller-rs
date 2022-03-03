@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 /// Configuration of a button that must have a name
 #[derive(Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct ButtonConfigWithName {
     pub name: String,
     pub up_face: Option<ButtonFaceConfig>,
@@ -14,6 +15,7 @@ pub struct ButtonConfigWithName {
 
 /// Configuration of a button that may have no name
 #[derive(Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct ButtonConfigOptionalName {
     pub name: Option<String>,
     pub up_face: Option<ButtonFaceConfig>,
@@ -25,6 +27,7 @@ pub struct ButtonConfigOptionalName {
 /// Configuration of a button or just the name of a button
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(untagged)]
+#[serde(deny_unknown_fields)]
 pub enum ButtonOrButtonName {
     ButtonName(String),
     Button(ButtonConfigOptionalName),

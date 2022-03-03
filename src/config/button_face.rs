@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 /// The face of a button (what is displayed on a button) from the config.
 #[derive(Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct ButtonFaceConfig {
     pub color: Option<ColorConfig>,
     pub file: Option<String>,

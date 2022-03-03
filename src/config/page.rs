@@ -3,12 +3,14 @@ use crate::config::button_position::ButtonPositionConfig;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct PageConfig {
     pub name: String,
     pub buttons: Vec<PageButtonConfig>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct PageButtonConfig {
     pub position: ButtonPositionConfig,
     pub button: ButtonOrButtonName,

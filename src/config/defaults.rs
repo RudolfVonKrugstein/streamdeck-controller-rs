@@ -3,6 +3,7 @@ use serde::Deserialize;
 
 /// Defaults section of the config file.
 #[derive(Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct DefaultsConfigSection {
     background_color: Option<ColorConfig>,
     label_color: Option<ColorConfig>,

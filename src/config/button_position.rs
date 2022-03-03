@@ -4,6 +4,7 @@ use serde::Deserialize;
 ///
 /// [row] and [col] can be negative, setting the position counting from right or below.
 #[derive(Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct ButtonPositionConfig {
     pub row: i32,
     pub col: i32,
