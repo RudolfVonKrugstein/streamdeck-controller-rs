@@ -5,6 +5,7 @@ use crate::state::error::Error;
 pub struct ForegroundWindowCondition {
     pub title: Option<regex::Regex>,
     pub executable: Option<regex::Regex>,
+    pub class_name: Option<regex::Regex>,
 }
 
 impl ForegroundWindowCondition {
@@ -21,12 +22,22 @@ impl ForegroundWindowCondition {
                 Some(regex::Regex::new(executable.as_str()).map_err(Error::RegexError)?)
             }
         };
-        Ok(ForegroundWindowCondition { title, executable })
+        let class_name = match &config.class_name {
+            None => None,
+            Some(class_name) => {
+                Some(regex::Regex::new(class_name.as_str()).map_err(Error::RegexError)?)
+            }
+        };
+        Ok(ForegroundWindowCondition {
+            title,
+            executable,
+            class_name,
+        })
     }
 
     /// Test whether the conditions is given by matching the title
     /// and the executable.
-    pub fn matches(&self, title: &String, executable: &String) -> bool {
+    pub fn matches(&self, title: &String, executable: &String, class_name: &String) -> bool {
         let title_matches = if let Some(title_re) = &self.title {
             title_re.is_match(title.as_str())
         } else {
@@ -37,7 +48,12 @@ impl ForegroundWindowCondition {
         } else {
             true
         };
-        title_matches && exec_matches
+        let class_matches = if let Some(class_re) = &self.class_name {
+            class_re.is_match(class_name.as_str())
+        } else {
+            true
+        };
+        title_matches && exec_matches && class_matches
     }
 }
 
@@ -51,6 +67,7 @@ mod tests {
         let config = crate::config::ForegroundWindowConditionConfig {
             title: Some(".*title.*".to_string()),
             executable: Some(".*exec.*".to_string()),
+            class_name: Some(".*class.*".to_string()),
         };
 
         // Act
@@ -59,7 +76,8 @@ mod tests {
         // Test
         assert!(object.matches(
             &String::from("Some title here"),
-            &String::from("Some executable here")
+            &String::from("Some executable here"),
+            &String::from("Some class here"),
         ));
     }
 
@@ -69,6 +87,7 @@ mod tests {
         let config = crate::config::ForegroundWindowConditionConfig {
             title: Some(".*title.*".to_string()),
             executable: Some(".*exec.*".to_string()),
+            class_name: Some(".*class.*".to_string()),
         };
 
         // Act
@@ -77,9 +96,19 @@ mod tests {
         // Test
         assert!(!object.matches(
             &String::from("No match"),
-            &String::from("Some executable here")
+            &String::from("Some executable here"),
+            &String::from("Some class here"),
         ));
-        assert!(!object.matches(&String::from("Some title here"), &String::from("No match")));
+        assert!(!object.matches(
+            &String::from("Some title here"),
+            &String::from("No match"),
+            &String::from("Some class here")
+        ));
+        assert!(!object.matches(
+            &String::from("Some title here"),
+            &String::from("Some executable here"),
+            &String::from("No match")
+        ));
     }
 
     #[test]
@@ -88,6 +117,7 @@ mod tests {
         let config = crate::config::ForegroundWindowConditionConfig {
             title: Some(".*title.*".to_string()),
             executable: None,
+            class_name: None,
         };
 
         // Act
@@ -96,11 +126,13 @@ mod tests {
         // Test
         assert!(!object.matches(
             &String::from("No match"),
-            &String::from("Some executable here")
+            &String::from("Some executable here"),
+            &String::from("No match")
         ));
         assert!(object.matches(
             &String::from("Some title here"),
-            &String::from("Some executable here")
+            &String::from("Some executable here"),
+            &String::from("No match")
         ));
     }
 
@@ -110,6 +142,7 @@ mod tests {
         let config = crate::config::ForegroundWindowConditionConfig {
             title: None,
             executable: Some(".*exec.*".to_string()),
+            class_name: None,
         };
 
         // Act
@@ -118,11 +151,38 @@ mod tests {
         // Test
         assert!(object.matches(
             &String::from("No match"),
-            &String::from("Some executable here")
+            &String::from("Some executable here"),
+            &String::from("Some class here")
         ));
         assert!(!object.matches(
             &String::from("Some title here"),
-            &String::from("Some executable here")
+            &String::from("No match"),
+            &String::from("Some class here")
+        ));
+    }
+
+    #[test]
+    fn test_with_only_class_name() {
+        // Setup
+        let config = crate::config::ForegroundWindowConditionConfig {
+            title: None,
+            executable: None,
+            class_name: Some(".*class.*".to_string()),
+        };
+
+        // Act
+        let object = ForegroundWindowCondition::from_config(&config).unwrap();
+
+        // Test
+        assert!(object.matches(
+            &String::from("No match"),
+            &String::from("No match"),
+            &String::from("Some class here")
+        ));
+        assert!(!object.matches(
+            &String::from("No match"),
+            &String::from("No match"),
+            &String::from("No match")
         ));
     }
 }

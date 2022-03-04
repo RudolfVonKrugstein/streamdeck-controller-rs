@@ -35,6 +35,14 @@ fn get_window_title(hwnd: &HWND) -> Result<String, Error> {
     Ok(String::from_utf16_lossy(&text[..len as usize]))
 }
 
+/// Helper function, returning the class name of a window
+fn get_window_class_name(hwnd: &HWND) -> Result<String, Error> {
+    let mut text: [u16; 512] = [0; 512];
+
+    let len = unsafe { GetClassNameW(hwnd, PWSTR(text.as_mut_ptr()), text.len() as i32) };
+    Ok(String::from_utf16_lossy(&text[..len as usize]))
+}
+
 /// Helper function, returning the executable of a window
 fn get_window_executable_name(hwnd: &HWND) -> Result<String, Error> {
     let mut text: [u16; 512] = [0; 512];
@@ -78,9 +86,14 @@ where
             return Err(Error::AlreadyStarted);
         }
         WINDOW_FOREGROUND_CALLBACK = Some(Box::new(move |hwnd| {
-            let title = get_window_title(&hwnd).unwrap_or("".to_string());
-            let executable = get_window_executable_name(&hwnd).unwrap_or("".to_string());
-            cb(WindowInformation { title, executable });
+            let title = get_window_title(&hwnd).unwrap_or_else(|_| "".to_string());
+            let executable = get_window_executable_name(&hwnd).unwrap_or_else(|_| "".to_string());
+            let class_name = get_window_class_name(&hwnd).unwrap_or_else(|_| "".to_string());
+            cb(WindowInformation {
+                title,
+                executable,
+                class_name,
+            });
         }));
 
         // Register the callback

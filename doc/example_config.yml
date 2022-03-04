@@ -99,12 +99,12 @@ pages:
               # python stuff
   - name: page2
     on_app:
-      - executable: ".*(brave\\.exe|vivaldi\\.exe|chrome\\.exe)"
+      - executable: ".*(brave|vivaldi|chrome)"
     buttons:
       - position:
           row: 0
           col: 0
-        button: button1
+        button: button2
       - position:
           row: 0
           col: 1
@@ -113,7 +113,7 @@ pages:
             color: "#FF0000"
             file: button1.png
             label:
-              text: "1"
+              text: "2"
               color: "#00FF00"
             sublabel:
               text: below

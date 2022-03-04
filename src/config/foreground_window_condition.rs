@@ -6,6 +6,7 @@ use serde::Deserialize;
 pub struct ForegroundWindowConditionConfig {
     pub title: Option<String>,
     pub executable: Option<String>,
+    pub class_name: Option<String>,
 }
 
 #[cfg(test)]
@@ -17,7 +18,11 @@ mod tests {
         // Setup
         let title_value = ".*title.*";
         let executable_value = ".*exec.*";
-        let yaml = format!("title: {}\nexecutable: {}\n", title_value, executable_value);
+        let class_name_value = ".*class.*";
+        let yaml = format!(
+            "title: {}\nexecutable: {}\nclass_name: {}\n",
+            title_value, executable_value, class_name_value
+        );
 
         // Act
         let deserialize: ForegroundWindowConditionConfig = serde_yaml::from_str(&yaml).unwrap();
@@ -25,6 +30,7 @@ mod tests {
         // Test
         assert_eq!(deserialize.title, Some(title_value.to_string()));
         assert_eq!(deserialize.executable, Some(executable_value.to_string()));
+        assert_eq!(deserialize.class_name, Some(class_name_value.to_string()));
     }
 
     #[test]
@@ -53,5 +59,19 @@ mod tests {
         // Test
         assert_eq!(deserialize.title, None);
         assert_eq!(deserialize.executable, Some(exec_value.to_string()));
+    }
+
+    #[test]
+    fn test_with_only_class_name() {
+        // Setup
+        let class_name_value = ".*class.*";
+        let yaml = format!("class_name: {}\n", class_name_value);
+
+        // Act
+        let deserialize: ForegroundWindowConditionConfig = serde_yaml::from_str(&yaml).unwrap();
+
+        // Test
+        assert_eq!(deserialize.title, None);
+        assert_eq!(deserialize.class_name, Some(class_name_value.to_string()));
     }
 }

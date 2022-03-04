@@ -109,6 +109,7 @@ where
     cb(WindowInformation {
         title: active_window_data.window_name,
         executable: active_window_data.command,
+        class_name: active_window_data.class,
     });
     Ok(())
 }

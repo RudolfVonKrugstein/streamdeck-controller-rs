@@ -9,9 +9,7 @@ pub fn run_foreground_window_event_loop_thread(
 ) -> Result<(), crate::foreground_window::Error> {
     let _wm_thread = thread::spawn(move || {
         foreground_window_observer(move |e| {
-            sender
-                .send(InputEvent::ForegroundWindow(e.title, e.executable))
-                .unwrap();
+            sender.send(InputEvent::ForegroundWindow(e)).unwrap();
         })
         .unwrap();
     });

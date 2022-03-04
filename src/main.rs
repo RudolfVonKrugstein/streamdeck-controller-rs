@@ -67,9 +67,11 @@ fn main() {
             InputEvent::ButtonUpEvent(button_id) => {
                 app_state.on_button_released(button_id as usize)
             }
-            InputEvent::ForegroundWindow(title, executable) => {
+            InputEvent::ForegroundWindow(info) => {
                 // So something
-                println!("Title: {}, exec: {}", title, executable);
+                app_state
+                    .on_foreground_window(&info.title, &info.executable, &info.class_name)
+                    .unwrap();
                 None
             }
         };

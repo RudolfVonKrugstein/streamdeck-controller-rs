@@ -117,6 +117,7 @@ buttons:
                 on_app: Some(vec![ForegroundWindowConditionConfig {
                     title: Some(".*title.*".to_string()),
                     executable: Some(".*exec.*".to_string()),
+                    class_name: None,
                 }]),
                 buttons: Vec::from([PageButtonConfig {
                     position: ButtonPositionConfig { row: 0, col: 1 },

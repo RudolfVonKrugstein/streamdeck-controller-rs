@@ -166,12 +166,13 @@ impl AppState {
         &mut self,
         title: &String,
         executable: &String,
+        class_name: &String,
     ) -> Result<(), Error> {
         let mut pages_to_load = Vec::new();
 
         for (page_name, page) in &self.pages {
             for condition in &page.on_foreground_window {
-                if condition.matches(title, executable) {
+                if condition.matches(title, executable, class_name) {
                     pages_to_load.push(page_name.clone());
                 }
             }
@@ -256,6 +257,7 @@ mod tests {
                 on_app: Some(vec![ForegroundWindowConditionConfig {
                     executable: Some(format!("{}_exec", page_id)),
                     title: Some(format!("{}_title", page_id)),
+                    class_name: None,
                 }]),
                 name: format!("page{}", page_id),
                 buttons: page_buttons,
@@ -434,10 +436,13 @@ mod tests {
 
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
-        state.on_foreground_window(
-            &String::from("This is a title for loading page2_title page"),
-            &String::from("Some executable we don't care about"),
-        );
+        state
+            .on_foreground_window(
+                &String::from("This is a title for loading page2_title page"),
+                &String::from("Some executable we don't care about"),
+                &String::from("Some class we don't care about"),
+            )
+            .unwrap();
 
         // Test
         assert!(false);
@@ -454,6 +459,7 @@ mod tests {
             .on_foreground_window(
                 &String::from("This is a title for we don't care about"),
                 &String::from("/usr/bin/page2_exec"),
+                &String::from("Some class we don't care about"),
             )
             .unwrap();
 
