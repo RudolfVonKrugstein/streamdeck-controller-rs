@@ -1,6 +1,5 @@
 use crate::config::ForegroundWindowConditionConfig;
 use crate::state::error::Error;
-use pyo3::sequence::getitem;
 
 /// Condition for actions based on foreground window
 pub struct ForegroundWindowCondition {

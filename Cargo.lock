@@ -1174,6 +1174,7 @@ dependencies = [
  "hidapi",
  "image",
  "imageproc",
+ "log",
  "more-asserts",
  "pyo3",
  "regex",
