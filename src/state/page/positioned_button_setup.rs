@@ -2,6 +2,7 @@ use super::super::button::ButtonSetupOrName;
 use super::super::button_position::ButtonPosition;
 use crate::config;
 use crate::state::button::ButtonSetup;
+use crate::state::defaults::Defaults;
 use crate::state::error::Error;
 use std::sync::Arc;
 use streamdeck_hid_rs::StreamDeckType;
@@ -30,9 +31,13 @@ impl PositionedButtonSetup {
     pub fn from_config_with_named_button(
         device_type: &StreamDeckType,
         config: &config::PageButtonConfig,
+        defaults: &Defaults,
     ) -> Result<(PositionedButtonSetup, Option<(String, Arc<ButtonSetup>)>), Error> {
-        let (setup, named_button) =
-            ButtonSetupOrName::from_config_with_named_button(device_type, &config.button)?;
+        let (setup, named_button) = ButtonSetupOrName::from_config_with_named_button(
+            device_type,
+            &config.button,
+            defaults,
+        )?;
         let position = ButtonPosition::from_config(&config.position);
 
         Ok((PositionedButtonSetup { position, setup }, named_button))
@@ -52,9 +57,12 @@ mod tests {
         };
 
         // Act
-        let _object =
-            PositionedButtonSetup::from_config_with_named_button(&StreamDeckType::Orig, &config)
-                .unwrap();
+        let _object = PositionedButtonSetup::from_config_with_named_button(
+            &StreamDeckType::Orig,
+            &config,
+            &Defaults::from_config(&None).unwrap(),
+        )
+        .unwrap();
 
         // Test
         assert!(true); // We just assert, that we did not panic!

@@ -4,6 +4,7 @@ use positioned_button_setup::*;
 use super::error::Error;
 use crate::config;
 use crate::state::button::ButtonSetup;
+use crate::state::defaults::Defaults;
 use crate::state::foreground_window_condition::ForegroundWindowCondition;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -21,6 +22,7 @@ impl Page {
     pub fn from_config_with_named_buttons(
         device_type: &StreamDeckType,
         config: &config::PageConfig,
+        defaults: &Defaults,
     ) -> Result<(Page, HashMap<String, Arc<ButtonSetup>>), Error> {
         let mut buttons = Vec::new();
         let mut named_buttons = HashMap::new();
@@ -36,8 +38,11 @@ impl Page {
         };
 
         for button_config in &config.buttons {
-            let (button, named_button) =
-                PositionedButtonSetup::from_config_with_named_button(device_type, button_config)?;
+            let (button, named_button) = PositionedButtonSetup::from_config_with_named_button(
+                device_type,
+                button_config,
+                defaults,
+            )?;
             buttons.push(button);
             if let Some((name, named_button)) = named_button {
                 named_buttons.insert(name, named_button);
@@ -82,10 +87,12 @@ mod tests {
                 },
             ]),
         };
+        let defaults = Defaults::from_config(&None).unwrap();
 
         // Act
         let (page, named_buttons) =
-            Page::from_config_with_named_buttons(&StreamDeckType::Orig, &config).unwrap();
+            Page::from_config_with_named_buttons(&StreamDeckType::Orig, &config, &defaults)
+                .unwrap();
 
         // Result
         assert!(named_buttons.is_empty());
@@ -109,10 +116,12 @@ mod tests {
                 }),
             }]),
         };
+        let defaults = Defaults::from_config(&None).unwrap();
 
         // Act
         let (page, named_buttons) =
-            Page::from_config_with_named_buttons(&StreamDeckType::Orig, &config).unwrap();
+            Page::from_config_with_named_buttons(&StreamDeckType::Orig, &config, &defaults)
+                .unwrap();
 
         // Result
         assert_eq!(named_buttons.len(), 1);

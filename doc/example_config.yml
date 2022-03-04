@@ -3,9 +3,15 @@ defaults:
   label_color: "#FFFFFF"
   superlabel_color: "#FF0000"
   sublabel_color:
-    red: 0
+    red: 255
     green: 0
     blue: 255
+on_app:
+  - condition:
+      executable: ".*terminal.*"
+    handler:
+      code: |
+        print("terminal")
 default_pages:
   - page1
 buttons:
@@ -17,7 +23,7 @@ buttons:
         text: "1"
         color: "#00FF00"
       sublabel:
-        text: below
+        text: below1
         color: "#0000FF"
       superlabel: above
     down_face:
@@ -44,7 +50,6 @@ buttons:
         color: "#00FF00"
       sublabel:
         text: below
-        color: "#0000FF"
       superlabel: above
     down_face:
       color: "#0000FF"

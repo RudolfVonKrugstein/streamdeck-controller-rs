@@ -1,6 +1,7 @@
 use super::error::Error;
 use crate::config;
 use crate::state::button_face::ButtonFace;
+use crate::state::defaults::Defaults;
 use crate::state::event_handler::EventHandler;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -31,15 +32,16 @@ impl ButtonSetup {
     pub fn from_optional_name_config(
         device_type: &streamdeck_hid_rs::StreamDeckType,
         config: &config::ButtonConfigOptionalName,
+        defaults: &Defaults,
     ) -> Result<ButtonSetup, Error> {
         // Create the members
         let up_face = match &config.up_face {
             None => None,
-            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f)?)),
+            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f, defaults)?)),
         };
         let down_face = match &config.down_face {
             None => None,
-            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f)?)),
+            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f, defaults)?)),
         };
         let up_handler = match &config.up_handler {
             None => None,
@@ -70,15 +72,16 @@ impl ButtonSetup {
     pub fn from_config_with_name(
         device_type: &streamdeck_hid_rs::StreamDeckType,
         config: &config::ButtonConfigWithName,
+        defaults: &Defaults,
     ) -> Result<ButtonSetup, Error> {
         // Create the members
         let up_face = match &config.up_face {
             None => None,
-            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f)?)),
+            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f, defaults)?)),
         };
         let down_face = match &config.down_face {
             None => None,
-            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f)?)),
+            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f, defaults)?)),
         };
         let up_handler = match &config.up_handler {
             None => None,
@@ -121,6 +124,7 @@ impl ButtonSetupOrName {
     pub fn from_config_with_named_button(
         device_type: &StreamDeckType,
         config: &config::ButtonOrButtonName,
+        defaults: &Defaults,
     ) -> Result<(ButtonSetupOrName, Option<(String, Arc<ButtonSetup>)>), Error> {
         Ok(match config {
             config::ButtonOrButtonName::ButtonName(name) =>
@@ -133,6 +137,7 @@ impl ButtonSetupOrName {
                 let button_setup = Arc::new(ButtonSetup::from_optional_name_config(
                     device_type,
                     setup_config,
+                    defaults,
                 )?);
                 match &setup_config.name {
                     None =>
@@ -273,11 +278,15 @@ mod tests {
     fn just_name_in_config_results_in_just_name() {
         // Setup
         let config = config::ButtonOrButtonName::ButtonName(String::from("test_button"));
+        let defaults = Defaults::from_config(&None).unwrap();
 
         // Act
-        let (button_or_name, named_button) =
-            ButtonSetupOrName::from_config_with_named_button(&StreamDeckType::Orig, &config)
-                .unwrap();
+        let (button_or_name, named_button) = ButtonSetupOrName::from_config_with_named_button(
+            &StreamDeckType::Orig,
+            &config,
+            &defaults,
+        )
+        .unwrap();
 
         // Test
         match button_or_name {
@@ -297,11 +306,15 @@ mod tests {
             up_handler: None,
             down_handler: None,
         });
+        let defaults = Defaults::from_config(&None).unwrap();
 
         // Act
-        let (button_or_name, named_button) =
-            ButtonSetupOrName::from_config_with_named_button(&StreamDeckType::Orig, &config)
-                .unwrap();
+        let (button_or_name, named_button) = ButtonSetupOrName::from_config_with_named_button(
+            &StreamDeckType::Orig,
+            &config,
+            &defaults,
+        )
+        .unwrap();
 
         // Test
         match button_or_name {
@@ -321,11 +334,15 @@ mod tests {
             up_handler: None,
             down_handler: None,
         });
+        let defaults = Defaults::from_config(&None).unwrap();
 
         // Act
-        let (button_or_name, named_button) =
-            ButtonSetupOrName::from_config_with_named_button(&StreamDeckType::Orig, &config)
-                .unwrap();
+        let (button_or_name, named_button) = ButtonSetupOrName::from_config_with_named_button(
+            &StreamDeckType::Orig,
+            &config,
+            &defaults,
+        )
+        .unwrap();
 
         // Test
         match button_or_name {

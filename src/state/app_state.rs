@@ -1,16 +1,19 @@
 use super::button::ButtonSetup;
 use super::button::ButtonState;
+use super::button_face::ButtonFace;
+use super::defaults::Defaults;
 use super::error::Error;
+use super::event_handler::EventHandler;
 use super::page::Page;
 use crate::config;
-use crate::state::button_face::ButtonFace;
-use crate::state::event_handler::EventHandler;
 use std::collections::HashMap;
 use std::sync::Arc;
 use streamdeck_hid_rs::StreamDeckType;
 
 /// The complete app state!
 pub struct AppState {
+    /// Defaults!
+    defaults: Defaults,
     /// Named buttons, that can be used and modified
     named_buttons: HashMap<String, Arc<ButtonSetup>>,
     /// Pages, that can be loaded
@@ -37,6 +40,8 @@ impl AppState {
         device_type: &StreamDeckType,
         config: &config::Config,
     ) -> Result<AppState, Error> {
+        let defaults = Defaults::from_config(&config.defaults)?;
+
         let mut named_buttons: HashMap<String, Arc<ButtonSetup>> = HashMap::new();
 
         if let Some(config_buttons) = &config.buttons {
@@ -47,8 +52,12 @@ impl AppState {
                 named_buttons.insert(
                     button_config.name.clone(),
                     Arc::new(
-                        ButtonSetup::from_config_with_name(&StreamDeckType::Orig, &button_config)
-                            .unwrap(),
+                        ButtonSetup::from_config_with_name(
+                            &StreamDeckType::Orig,
+                            &button_config,
+                            &defaults,
+                        )
+                        .unwrap(),
                     ),
                 );
             }
@@ -58,7 +67,7 @@ impl AppState {
 
         for page_config in &config.pages {
             let (page, more_named_buttons) =
-                Page::from_config_with_named_buttons(device_type, &page_config)?;
+                Page::from_config_with_named_buttons(device_type, &page_config, &defaults)?;
             pages.insert(page_config.name.clone(), Arc::new(page));
             for (name, new_named_button) in more_named_buttons {
                 if named_buttons.contains_key(&name) {
@@ -74,6 +83,7 @@ impl AppState {
         }
 
         let mut result = AppState {
+            defaults,
             named_buttons,
             pages,
             buttons,
@@ -264,10 +274,13 @@ mod tests {
             });
         }
 
+        let on_app = None;
+
         config::Config {
             defaults: None,
             buttons: Some(named_buttons),
             pages,
+            on_app,
             default_pages: Some(vec!["page0".to_string()]),
         }
     }

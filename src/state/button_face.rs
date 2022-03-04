@@ -1,4 +1,5 @@
 use super::error::Error;
+use super::Defaults;
 use crate::config;
 use image::Pixel;
 
@@ -16,6 +17,7 @@ impl ButtonFace {
     pub fn from_config(
         device_type: &streamdeck_hid_rs::StreamDeckType,
         face_config: &config::ButtonFaceConfig,
+        defaults: &Defaults,
     ) -> Result<ButtonFace, Error> {
         // Start by creating the face (as rgba image
         // because we want to write rgba data on it).
@@ -24,7 +26,7 @@ impl ButtonFace {
 
         // Get the background color
         let back_color = match &face_config.color {
-            None => image::Rgba([0, 0, 0, 255]),
+            None => defaults.background_color,
             Some(c) => c.to_image_rgba_color().map_err(Error::ConfigError)?,
         };
 
@@ -55,13 +57,28 @@ impl ButtonFace {
 
         // Draw the text on it
         if let Some(label_text) = &face_config.label {
-            draw_positioned_colored_text(&mut face, label_text, TextPosition::Center);
+            draw_positioned_colored_text(
+                &mut face,
+                label_text,
+                TextPosition::Center,
+                &defaults.label_color,
+            );
         }
         if let Some(label_text) = &face_config.sublabel {
-            draw_positioned_colored_text(&mut face, label_text, TextPosition::Sub);
+            draw_positioned_colored_text(
+                &mut face,
+                label_text,
+                TextPosition::Sub,
+                &defaults.sublabel_color,
+            );
         }
         if let Some(label_text) = &face_config.superlabel {
-            draw_positioned_colored_text(&mut face, label_text, TextPosition::Super);
+            draw_positioned_colored_text(
+                &mut face,
+                label_text,
+                TextPosition::Super,
+                &defaults.superlabel_color,
+            );
         }
 
         let device_type = device_type.clone();
@@ -107,19 +124,21 @@ fn draw_positioned_colored_text(
     image: &mut image::RgbImage,
     label: &config::LabelConfig,
     position: TextPosition,
+    default_color: &image::Rgba<u8>,
 ) {
     // Font data
     let font_data: &[u8] = include_bytes!("../../assets/DejaVuSans.ttf");
     let font = rusttype::Font::try_from_vec(Vec::from(font_data)).unwrap();
 
-    // Find the color, defaulting to white
+    // Find the color, defaulting to the default color
     let color = match label {
-        config::LabelConfig::JustText(_) => image::Rgba([255, 255, 255, 255]),
+        config::LabelConfig::JustText(_) => *default_color,
         config::LabelConfig::WithColor(c) => match &c.color {
-            None => image::Rgba([255, 255, 255, 255]),
-            Some(c) => c
-                .to_image_rgba_color()
-                .unwrap_or(image::Rgba([255, 255, 255, 255])),
+            None => *default_color,
+            Some(c) => match c.to_image_rgba_color() {
+                Err(_) => *default_color,
+                Ok(c) => c,
+            },
         },
     };
 
@@ -190,6 +209,7 @@ mod tests {
                 sublabel: None,
                 superlabel: None,
             },
+            &Defaults::from_config(&None).unwrap(),
         )
         .unwrap();
 
@@ -218,6 +238,7 @@ mod tests {
                 sublabel: None,
                 superlabel: None,
             },
+            &Defaults::from_config(&None).unwrap(),
         )
         .unwrap();
 
@@ -246,6 +267,7 @@ mod tests {
                 sublabel: None,
                 superlabel: None,
             },
+            &Defaults::from_config(&None).unwrap(),
         )
         .unwrap();
 
@@ -285,6 +307,7 @@ mod tests {
                 })),
                 superlabel: None,
             },
+            &Defaults::from_config(&None).unwrap(),
         )
         .unwrap();
 
@@ -331,6 +354,7 @@ mod tests {
                     text: String::from("AAAA"),
                 })),
             },
+            &Defaults::from_config(&None).unwrap(),
         )
         .unwrap();
 

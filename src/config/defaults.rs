@@ -4,11 +4,11 @@ use serde::Deserialize;
 /// Defaults section of the config file.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub struct DefaultsConfigSection {
-    background_color: Option<ColorConfig>,
-    label_color: Option<ColorConfig>,
-    superlabel_color: Option<ColorConfig>,
-    sublabel_color: Option<ColorConfig>,
+pub struct DefaultsConfig {
+    pub background_color: Option<ColorConfig>,
+    pub label_color: Option<ColorConfig>,
+    pub superlabel_color: Option<ColorConfig>,
+    pub sublabel_color: Option<ColorConfig>,
 }
 
 #[cfg(test)]
@@ -23,7 +23,7 @@ mod tests {
         let yaml = "{}";
 
         // Act
-        let deserialize: DefaultsConfigSection = serde_yaml::from_str(&yaml).unwrap();
+        let deserialize: DefaultsConfig = serde_yaml::from_str(&yaml).unwrap();
 
         // Test
         assert_eq!(deserialize.background_color, None);
@@ -45,7 +45,7 @@ superlabel_color: '#00FF00'
 sublabel_color: '#FF0000'";
 
         // Act
-        let deserialize: DefaultsConfigSection = serde_yaml::from_str(&yaml).unwrap();
+        let deserialize: DefaultsConfig = serde_yaml::from_str(&yaml).unwrap();
 
         // Test
         assert_eq!(
