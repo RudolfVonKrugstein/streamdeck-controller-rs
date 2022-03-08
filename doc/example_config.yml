@@ -104,7 +104,7 @@ pages:
               # python stuff
   - name: page2
     on_app:
-      - executable: ".*(brave|vivaldi|chrome)"
+      - executable: ".*(brave|vivaldi|chrome).*"
     buttons:
       - position:
           row: 0

@@ -36,7 +36,7 @@ pub struct Config {
     pub buttons: Option<Vec<button::ButtonConfigWithName>>,
     pub pages: Vec<page::PageConfig>,
     pub default_pages: Option<Vec<String>>,
-    pub on_app: Option<ForegroundWindowHandlerConfig>,
+    pub on_app: Vec<ForegroundWindowHandlerConfig>,
 }
 
 #[cfg(test)]

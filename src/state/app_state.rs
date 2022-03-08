@@ -265,8 +265,8 @@ mod tests {
             }
             pages.push(config::PageConfig {
                 on_app: Some(vec![ForegroundWindowConditionConfig {
-                    executable: Some(format!("{}_exec", page_id)),
-                    title: Some(format!("{}_title", page_id)),
+                    executable: Some(format!(".*page{}_exec.*", page_id)),
+                    title: Some(format!(".*page{}_title.*", page_id)),
                     class_name: None,
                 }]),
                 name: format!("page{}", page_id),
@@ -274,7 +274,7 @@ mod tests {
             });
         }
 
-        let on_app = None;
+        let on_app = Vec::new();
 
         config::Config {
             defaults: None,
@@ -443,7 +443,7 @@ mod tests {
     }
 
     #[test]
-    fn load_page_on_window_title() {
+    fn load_page_on_window() {
         // Setup
         let config = get_full_config(false);
 
@@ -452,31 +452,15 @@ mod tests {
         state
             .on_foreground_window(
                 &String::from("This is a title for loading page2_title page"),
-                &String::from("Some executable we don't care about"),
-                &String::from("Some class we don't care about"),
-            )
-            .unwrap();
-
-        // Test
-        assert!(false);
-    }
-
-    #[test]
-    fn load_page_on_window_executable() {
-        // Setup
-        let config = get_full_config(false);
-
-        // Act
-        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
-        state
-            .on_foreground_window(
-                &String::from("This is a title for we don't care about"),
                 &String::from("/usr/bin/page2_exec"),
                 &String::from("Some class we don't care about"),
             )
             .unwrap();
 
         // Test
-        assert!(false);
+        assert_eq!(
+            state.on_button_pressed(0).unwrap().script,
+            "on_page2_button4_down"
+        );
     }
 }
