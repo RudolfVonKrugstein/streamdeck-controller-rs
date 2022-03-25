@@ -10,7 +10,7 @@ use crate::input_event::{
 use crate::state::AppState;
 use clap::Parser;
 use std::fs::File;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 /// Command line arguments.
 ///
@@ -38,7 +38,7 @@ fn main() {
     // Change to the directory of the config
     let config_dir = args.config.as_path().parent().unwrap();
     std::env::set_current_dir(&config_dir).unwrap();
-    let mut app_state = AppState::from_config(&device.device_type, &config).unwrap();
+    let app_state = RwLock::new(AppState::from_config(&device.device_type, &config).unwrap());
 
     // Create the channels for communication
     let (sender, receiver): (
@@ -49,27 +49,36 @@ fn main() {
     // Run streamdeck input event thread
     run_input_loop_thread(device.clone(), sender.clone()).unwrap();
 
-    // Run forground window event thread
+    // Run foreground window event thread
     run_foreground_window_event_loop_thread(sender.clone()).unwrap();
 
     // Receive events!
     loop {
-        let faces = app_state.set_rendered_and_get_rendering_faces();
+        let faces = {
+            app_state
+                .write()
+                .unwrap()
+                .set_rendered_and_get_rendering_faces()
+        };
         for (button_id, face) in faces {
             device.set_button_image(button_id, &face.face).unwrap();
         }
 
         let e = receiver.recv().unwrap();
         let handler = match e {
-            InputEvent::ButtonDownEvent(button_id) => {
-                app_state.on_button_pressed(button_id as usize)
-            }
-            InputEvent::ButtonUpEvent(button_id) => {
-                app_state.on_button_released(button_id as usize)
-            }
+            InputEvent::ButtonDownEvent(button_id) => app_state
+                .write()
+                .unwrap()
+                .on_button_pressed(button_id as usize),
+            InputEvent::ButtonUpEvent(button_id) => app_state
+                .write()
+                .unwrap()
+                .on_button_released(button_id as usize),
             InputEvent::ForegroundWindow(info) => {
                 // So something
                 app_state
+                    .write()
+                    .unwrap()
                     .on_foreground_window(&info.title, &info.executable, &info.class_name)
                     .unwrap();
                 None
