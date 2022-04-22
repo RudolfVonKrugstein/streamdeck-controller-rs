@@ -108,6 +108,7 @@ pages:
               app.top_window().set_focus()
   - name: page2
     on_app:
+      conditions:
       - executable: ".*(brave|vivaldi|chrome).*"
     buttons:
       - position:

@@ -6,6 +6,9 @@ use super::error::Error;
 use super::event_handler::EventHandler;
 use super::page::Page;
 use crate::config;
+use crate::config::{ButtonConfigWithName, ButtonFaceConfig, ColorConfig};
+use crate::state::button::ButtonSetupOrName;
+use log::debug;
 use std::collections::HashMap;
 use std::sync::Arc;
 use streamdeck_hid_rs::StreamDeckType;
@@ -54,15 +57,38 @@ impl AppState {
                 named_buttons.insert(
                     button_config.name.clone(),
                     Arc::new(
-                        ButtonSetup::from_config_with_name(
-                            &StreamDeckType::Orig,
-                            &button_config,
-                            &defaults,
-                        )
-                        .unwrap(),
+                        ButtonSetup::from_config_with_name(&device_type, &button_config, &defaults)
+                            .unwrap(),
                     ),
                 );
             }
+        }
+
+        // Create a special empty named button (that can be overwritten)
+        if !named_buttons.contains_key("empty") {
+            named_buttons.insert(
+                "empty".to_string(),
+                Arc::new(
+                    ButtonSetup::from_config_with_name(
+                        &device_type,
+                        &ButtonConfigWithName {
+                            name: "empty".to_string(),
+                            up_face: Some(ButtonFaceConfig {
+                                color: Some(ColorConfig::HEXString("#000000".to_string())),
+                                file: None,
+                                label: None,
+                                sublabel: None,
+                                superlabel: None,
+                            }),
+                            down_face: None,
+                            up_handler: None,
+                            down_handler: None,
+                        },
+                        &defaults,
+                    )
+                    .unwrap(),
+                ),
+            );
         }
 
         let mut pages: HashMap<String, Arc<Page>> = HashMap::new();
@@ -178,10 +204,41 @@ impl AppState {
         // Load all the buttons
         for button in &page.buttons {
             self.buttons[button.position.to_button_index(&self.device_type)]
-                .set_setup(&button.setup);
+                .set_setup(&button.setup, Some(page_name.clone()));
         }
 
         // All went fine!
+        debug!("page {} loaded", page_name);
+        Ok(())
+    }
+
+    /// Unloads a page, setting all the buttons that originate from this page to be empty.
+    ///
+    /// # Arguments
+    ///
+    /// page_name - Name of the page to be un-loaded.
+    ///
+    /// # Return
+    ///
+    /// () if all went ok, Error if something went wrong
+    fn unload_page(&mut self, page_name: &String) -> Result<(), Error> {
+        // Find the page
+        let page = self
+            .pages
+            .get(page_name)
+            .ok_or(Error::PageNotFound(page_name.clone()))?;
+
+        // Get through all the buttons
+        for button in self.buttons.iter_mut() {
+            debug!("{:?} == {:?}", button.from_page, page_name);
+            if button.from_page.eq(&Some(page_name.clone())) {
+                debug!("yes!");
+                button.set_setup(&ButtonSetupOrName::Name("empty".to_string()), None);
+            }
+        }
+
+        // All went fine!
+        debug!("page {} un-loaded", page_name);
         Ok(())
     }
 
@@ -193,17 +250,24 @@ impl AppState {
         class_name: &String,
     ) -> Result<(), Error> {
         let mut pages_to_load = Vec::new();
+        let mut pages_to_unload: Vec<String> = Vec::new();
 
         for (page_name, page) in &self.pages {
             for condition in &page.on_foreground_window {
                 if condition.matches(title, executable, class_name) {
                     pages_to_load.push(page_name.clone());
+                } else if page.unload_if_not_loaded {
+                    pages_to_unload.push(page_name.clone());
                 }
             }
         }
 
         for page_name in pages_to_load {
             self.load_page(&page_name)?;
+        }
+
+        for page_name in pages_to_unload {
+            self.unload_page(&page_name);
         }
 
         Ok(())
@@ -213,7 +277,7 @@ impl AppState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::ForegroundWindowConditionConfig;
+    use crate::config::{ForegroundWindowConditionConfig, PageLoadConditions};
 
     /// Returns a full config to be used in tests
     ///
@@ -278,23 +342,27 @@ mod tests {
                 });
             }
             pages.push(config::PageConfig {
-                on_app: Some(vec![ForegroundWindowConditionConfig {
-                    executable: Some(format!(".*page{}_exec.*", page_id)),
-                    title: Some(format!(".*page{}_title.*", page_id)),
-                    class_name: None,
-                }]),
+                on_app: Some(PageLoadConditions {
+                    conditions: vec![ForegroundWindowConditionConfig {
+                        executable: Some(format!(".*page{}_exec.*", page_id)),
+                        title: Some(format!(".*page{}_title.*", page_id)),
+                        class_name: None,
+                    }],
+                    remove: None,
+                }),
                 name: format!("page{}", page_id),
                 buttons: page_buttons,
             });
         }
 
-        let on_app = Vec::new();
+        let on_app = None;
 
         config::Config {
             defaults: None,
             buttons: Some(named_buttons),
             pages,
             on_app,
+            init_script: None,
             default_pages: Some(vec!["page0".to_string()]),
         }
     }

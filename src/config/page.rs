@@ -7,7 +7,7 @@ use serde::Deserialize;
 #[serde(deny_unknown_fields)]
 pub struct PageConfig {
     pub name: String,
-    pub on_app: Option<Vec<ForegroundWindowConditionConfig>>,
+    pub on_app: Option<PageLoadConditions>,
     pub buttons: Vec<PageButtonConfig>,
 }
 
@@ -16,6 +16,13 @@ pub struct PageConfig {
 pub struct PageButtonConfig {
     pub position: ButtonPositionConfig,
     pub button: ButtonOrButtonName,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PageLoadConditions {
+    pub conditions: Vec<ForegroundWindowConditionConfig>,
+    pub remove: Option<bool>,
 }
 
 #[cfg(test)]
@@ -97,6 +104,7 @@ buttons:
         let yaml = "\
 name: page1
 on_app:
+  conditions:
   - executable: '.*exec.*'
     title: '.*title.*'
 buttons:
@@ -114,11 +122,14 @@ buttons:
             deserialize,
             PageConfig {
                 name: String::from("page1"),
-                on_app: Some(vec![ForegroundWindowConditionConfig {
-                    title: Some(".*title.*".to_string()),
-                    executable: Some(".*exec.*".to_string()),
-                    class_name: None,
-                }]),
+                on_app: Some(PageLoadConditions {
+                    conditions: vec![ForegroundWindowConditionConfig {
+                        title: Some(".*title.*".to_string()),
+                        executable: Some(".*exec.*".to_string()),
+                        class_name: None,
+                    }],
+                    remove: None
+                }),
                 buttons: Vec::from([PageButtonConfig {
                     position: ButtonPositionConfig { row: 0, col: 1 },
                     button: ButtonOrButtonName::ButtonName(String::from("button1"))

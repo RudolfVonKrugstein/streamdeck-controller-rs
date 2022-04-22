@@ -1,4 +1,5 @@
 mod positioned_button_setup;
+
 use positioned_button_setup::*;
 
 use super::error::Error;
@@ -14,6 +15,7 @@ use streamdeck_hid_rs::StreamDeckType;
 pub struct Page {
     pub buttons: Vec<PositionedButtonSetup>,
     pub on_foreground_window: Vec<ForegroundWindowCondition>,
+    pub unload_if_not_loaded: bool,
 }
 
 impl Page {
@@ -26,12 +28,14 @@ impl Page {
     ) -> Result<(Page, HashMap<String, Arc<ButtonSetup>>), Error> {
         let mut buttons = Vec::new();
         let mut named_buttons = HashMap::new();
+        let mut unload_if_not_loaded = false;
         let on_foreground_window = match &config.on_app {
             None => Vec::new(),
             Some(configs) => {
                 let mut l = Vec::new();
-                for c in configs {
-                    l.push(ForegroundWindowCondition::from_config(&c)?);
+                unload_if_not_loaded = configs.remove == Some(true);
+                for c in &configs.conditions {
+                    l.push(ForegroundWindowCondition::from_config(c)?);
                 }
                 l
             }
@@ -53,6 +57,7 @@ impl Page {
             Page {
                 on_foreground_window,
                 buttons,
+                unload_if_not_loaded,
             },
             named_buttons,
         ))
