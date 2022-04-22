@@ -1,3 +1,5 @@
+extern crate core;
+
 mod config;
 mod foreground_window;
 mod input_event;
@@ -7,9 +9,9 @@ mod state;
 use crate::input_event::{
     run_foreground_window_event_loop_thread, run_input_loop_thread, InputEvent,
 };
-use crate::state::AppState;
+use crate::state::{AppState, EventHandler};
 use clap::Parser;
-use log::info;
+use log::{debug, info};
 use std::fs::File;
 use std::sync::{Arc, RwLock};
 
@@ -56,6 +58,15 @@ fn main() {
     // Run foreground window event thread
     run_foreground_window_event_loop_thread(sender.clone()).unwrap();
 
+    // Run init script
+    {
+        if let Some(init_handler) = app_state.read().unwrap().get_init_handler() {
+            debug!("running init script");
+            let engine = crate::script_engine::PythonEngine::new();
+            engine.run_event_handler(&init_handler).unwrap();
+        }
+    }
+
     // Receive events!
     loop {
         let faces = {
@@ -81,6 +92,10 @@ fn main() {
                 .on_button_released(button_id as usize),
             InputEvent::ForegroundWindow(info) => {
                 // So something
+                debug!(
+                    "new foreground window: title={}, executable={}, class_name={}",
+                    info.title, info.executable, info.class_name
+                );
                 app_state
                     .write()
                     .unwrap()

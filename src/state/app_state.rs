@@ -22,6 +22,8 @@ pub struct AppState {
     buttons: Vec<ButtonState>,
     /// The device type this is for!
     device_type: StreamDeckType,
+    /// Init event hanlder
+    init_handler: Option<Arc<EventHandler>>,
 }
 
 impl AppState {
@@ -82,11 +84,18 @@ impl AppState {
             buttons.push(ButtonState::empty());
         }
 
+        let init_handler = if let Some(init_event_config) = &config.init_script {
+            Some(Arc::new(EventHandler::from_config(&init_event_config)?))
+        } else {
+            None
+        };
+
         let mut result = AppState {
             defaults,
             named_buttons,
             pages,
             buttons,
+            init_handler,
             device_type: device_type.clone(),
         };
 
@@ -96,6 +105,11 @@ impl AppState {
             }
         }
         Ok(result)
+    }
+
+    /// Returns the init event to be executed by the script engine
+    pub fn get_init_handler(&self) -> Option<Arc<EventHandler>> {
+        self.init_handler.clone()
     }
 
     /// Button gets pressed
