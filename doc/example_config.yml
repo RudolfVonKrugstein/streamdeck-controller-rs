@@ -102,6 +102,10 @@ pages:
           up_handler:
             code: |
               # python stuff
+              from pywinauto import application
+              app = application.Application()
+              app.connect(title_re=".*Task-Manager.*")
+              app.top_window().set_focus()
   - name: page2
     on_app:
       - executable: ".*(brave|vivaldi|chrome).*"
@@ -139,3 +143,6 @@ pages:
           up_handler:
             code: |
               # python stuff
+              from pywinauto.findwindows    import find_window
+              from pywinauto.win32functions import SetForegroundWindow
+              SetForegroundWindow(find_window(title='taskeng.exe'))

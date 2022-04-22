@@ -9,6 +9,7 @@ use crate::input_event::{
 };
 use crate::state::AppState;
 use clap::Parser;
+use log::info;
 use std::fs::File;
 use std::sync::{Arc, RwLock};
 
@@ -22,6 +23,9 @@ struct Cli {
 }
 
 fn main() {
+    // Start the logger
+    simple_logger::SimpleLogger::new().env().init().unwrap();
+
     // Parse input arguments
     let args = Cli::parse();
 
@@ -64,6 +68,7 @@ fn main() {
             device.set_button_image(button_id, &face.face).unwrap();
         }
 
+        info!("Waiting for input events");
         let e = receiver.recv().unwrap();
         let handler = match e {
             InputEvent::ButtonDownEvent(button_id) => app_state
@@ -84,7 +89,6 @@ fn main() {
                 None
             }
         };
-        println!("{:?}", handler);
 
         if let Some(event_handler) = handler {
             let engine = crate::script_engine::PythonEngine::new();
