@@ -5,8 +5,10 @@ use positioned_button_setup::*;
 use super::error::Error;
 use crate::config;
 use crate::state::button::ButtonSetup;
+use crate::state::button_position::ButtonPosition;
 use crate::state::defaults::Defaults;
 use crate::state::foreground_window_condition::ForegroundWindowCondition;
+use pyo3::number::pos;
 use std::collections::HashMap;
 use std::sync::Arc;
 use streamdeck_hid_rs::StreamDeckType;
@@ -61,6 +63,20 @@ impl Page {
             },
             named_buttons,
         ))
+    }
+
+    /// Get button at position, if it exists
+    pub fn get_button(
+        &self,
+        device_type: &StreamDeckType,
+        button_index: usize,
+    ) -> Option<&PositionedButtonSetup> {
+        for button in &self.buttons {
+            if button.position.to_button_index(device_type) == button_index {
+                return Some(button);
+            }
+        }
+        None
     }
 }
 

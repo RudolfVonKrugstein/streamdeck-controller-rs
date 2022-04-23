@@ -23,6 +23,8 @@ pub struct AppState {
     pages: HashMap<String, Arc<Page>>,
     /// The current loaded buttons
     buttons: Vec<ButtonState>,
+    /// The current stack of loaded pages
+    loaded_pages: Vec<String>,
     /// The device type this is for!
     device_type: StreamDeckType,
     /// Init event hanlder
@@ -123,6 +125,7 @@ impl AppState {
             buttons,
             init_handler,
             device_type: device_type.clone(),
+            loaded_pages: Vec::new(),
         };
 
         if let Some(page_names) = &config.default_pages {
@@ -201,10 +204,13 @@ impl AppState {
             .get(page_name)
             .ok_or(Error::PageNotFound(page_name.clone()))?;
 
+        // Add page to stack
+        self.loaded_pages.push(page_name.clone());
+
         // Load all the buttons
         for button in &page.buttons {
             self.buttons[button.position.to_button_index(&self.device_type)]
-                .set_setup(&button.setup, Some(page_name.clone()));
+                .set_setup(&button.setup);
         }
 
         // All went fine!
@@ -228,12 +234,23 @@ impl AppState {
             .get(page_name)
             .ok_or(Error::PageNotFound(page_name.clone()))?;
 
+        // Remove the page from the stack
+        self.loaded_pages.retain(|i| i != page_name);
+
         // Get through all the buttons
-        for button in self.buttons.iter_mut() {
-            debug!("{:?} == {:?}", button.from_page, page_name);
-            if button.from_page.eq(&Some(page_name.clone())) {
-                debug!("yes!");
-                button.set_setup(&ButtonSetupOrName::Name("empty".to_string()), None);
+        for button_index in 0..self.device_type.total_num_buttons() {
+            if page.get_button(&self.device_type, button_index).is_some() {
+                // Button needs to be removed, that means we have to find the correct button from the stack!
+                self.buttons[button_index].set_setup(&ButtonSetupOrName::Name("empty".to_string()));
+                for stack_page_name in &self.loaded_pages {
+                    if let Some(button) = self
+                        .pages
+                        .get(stack_page_name.as_str())
+                        .and_then(|p| p.get_button(&self.device_type, button_index))
+                    {
+                        self.buttons[button_index].set_setup(&button.setup);
+                    }
+                }
             }
         }
 
@@ -278,6 +295,10 @@ impl AppState {
 mod tests {
     use super::*;
     use crate::config::{ForegroundWindowConditionConfig, PageLoadConditions};
+    use image::RgbImage;
+    use std::borrow::Borrow;
+    use std::collections::hash_map::RandomState;
+    use std::collections::HashSet;
 
     /// Returns a full config to be used in tests
     ///
@@ -327,7 +348,10 @@ mod tests {
                         up_face: Some(config::ButtonFaceConfig {
                             color: None,
                             file: None,
-                            label: None,
+                            label: Some(config::LabelConfig::JustText(format!(
+                                "page{}_button{}",
+                                page_id, button_id
+                            ))),
                             sublabel: None,
                             superlabel: None,
                         }),
@@ -497,8 +521,13 @@ mod tests {
         assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 0);
     }
 
+    // Get the md5 sum of an image
+    fn image_md5(i: &RgbImage) -> md5::Digest {
+        md5::compute(i.as_raw())
+    }
+
     #[test]
-    fn page_loading_results_in_face_for_new_button_returned_on_button_press() {
+    fn page_loading_results_in_face_for_new_button_returned_for_rendering() {
         // Setup
         let config = get_full_config(false);
 
@@ -508,7 +537,91 @@ mod tests {
         state.load_page(&"page1".to_string()).unwrap();
 
         // Test
-        assert_eq!(state.set_rendered_and_get_rendering_faces().len(), 15);
+        let face_md5s = HashSet::<md5::Digest, RandomState>::from_iter(
+            state
+                .set_rendered_and_get_rendering_faces()
+                .iter()
+                .map(|f| image_md5(&f.1.face)),
+        );
+        assert_eq!(face_md5s.len(), 15);
+        for index in 0..15 {
+            assert!(face_md5s.contains(&image_md5(
+                &state
+                    .named_buttons
+                    .get(format!("page1_button{index}").as_str())
+                    .unwrap()
+                    .up_face
+                    .as_ref()
+                    .unwrap()
+                    .face
+            )))
+        }
+    }
+
+    #[test]
+    fn page_loading_and_unloading_results_in_face_for_empty_needing_rendering() {
+        // Setup
+        let config = get_full_config(false);
+
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        state.unload_page(&"page0".to_string()).unwrap();
+        state.set_rendered_and_get_rendering_faces();
+        state.load_page(&"page1".to_string()).unwrap();
+        state.set_rendered_and_get_rendering_faces();
+        state.unload_page(&"page1".to_string()).unwrap();
+
+        // Test
+        let rendering_faces = state.set_rendered_and_get_rendering_faces();
+        let face_md5s = HashSet::<md5::Digest, RandomState>::from_iter(
+            rendering_faces.iter().map(|f| image_md5(&f.1.face)),
+        );
+        assert_eq!(rendering_faces.len(), 15);
+        assert_eq!(face_md5s.len(), 1);
+        assert!(face_md5s.contains(&image_md5(
+            &state
+                .named_buttons
+                .get("empty".to_string().as_str())
+                .unwrap()
+                .up_face
+                .as_ref()
+                .unwrap()
+                .face
+        )));
+    }
+
+    #[test]
+    fn page_unloading_over_other_page_results_in_other_page_visible() {
+        // Setup
+        let config = get_full_config(false);
+
+        // Act
+        let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
+        state.set_rendered_and_get_rendering_faces();
+        state.load_page(&"page1".to_string()).unwrap();
+        state.load_page(&"page2".to_string()).unwrap();
+        state.set_rendered_and_get_rendering_faces();
+        state.unload_page(&"page2".to_string()).unwrap();
+
+        // Test
+        let rendering_faces = state.set_rendered_and_get_rendering_faces();
+        let face_md5s = HashSet::<md5::Digest, RandomState>::from_iter(
+            rendering_faces.iter().map(|f| image_md5(&f.1.face)),
+        );
+        assert_eq!(rendering_faces.len(), 15);
+        assert_eq!(face_md5s.len(), 15);
+        for index in 0..15 {
+            assert!(face_md5s.contains(&image_md5(
+                &state
+                    .named_buttons
+                    .get(format!("page1_button{index}").as_str())
+                    .unwrap()
+                    .up_face
+                    .as_ref()
+                    .unwrap()
+                    .face
+            )))
+        }
     }
 
     #[test]

@@ -33,6 +33,7 @@ impl PositionFromBorder {
 }
 
 /// Position of a button
+#[derive(PartialEq)]
 pub struct ButtonPosition {
     pub col: PositionFromBorder,
     pub row: PositionFromBorder,

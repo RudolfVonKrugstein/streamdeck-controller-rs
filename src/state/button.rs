@@ -12,10 +12,10 @@ use streamdeck_hid_rs::StreamDeckType;
 /// This setup can be applied to any button. But it is not
 /// the state of concrete button, it is part of the state (see [ButtonState]).
 pub struct ButtonSetup {
-    up_face: Option<Arc<ButtonFace>>,
-    down_face: Option<Arc<ButtonFace>>,
-    up_handler: Option<Arc<EventHandler>>,
-    down_handler: Option<Arc<EventHandler>>,
+    pub up_face: Option<Arc<ButtonFace>>,
+    pub down_face: Option<Arc<ButtonFace>>,
+    pub up_handler: Option<Arc<EventHandler>>,
+    pub down_handler: Option<Arc<EventHandler>>,
 }
 
 impl ButtonSetup {
@@ -173,8 +173,6 @@ pub struct ButtonState {
     // And how it is rendered. Basically, if this is not the same
     // as the press_state the button is not correctly rendered
     render_state: Option<PressState>,
-    // The page from which this button was loaded
-    pub from_page: Option<String>,
 }
 
 impl ButtonState {
@@ -183,7 +181,6 @@ impl ButtonState {
             setup,
             press_state: PressState::Up,
             render_state: None,
-            from_page: None,
         }
     }
 
@@ -192,7 +189,6 @@ impl ButtonState {
             setup: ButtonSetupOrName::Name(String::from("empty")),
             press_state: PressState::Up,
             render_state: None,
-            from_page: None,
         }
     }
 
@@ -237,13 +233,12 @@ impl ButtonState {
     }
 
     /// Sets/changes the setup for this button!
-    pub fn set_setup(&mut self, setup: &ButtonSetupOrName, from_page: Option<String>) {
+    pub fn set_setup(&mut self, setup: &ButtonSetupOrName) {
         self.setup = match setup {
             ButtonSetupOrName::Name(name) => ButtonSetupOrName::Name(name.clone()),
             ButtonSetupOrName::Setup(setup) => ButtonSetupOrName::Setup(Arc::clone(setup)),
         };
         self.render_state = None;
-        self.from_page = from_page;
     }
 
     /// Sets the button to rendered and gets the faced that has to be rendered
@@ -465,7 +460,7 @@ mod tests {
         let mut state = ButtonState::new(ButtonSetupOrName::Name("button".to_string()));
 
         // Act
-        state.set_setup(&ButtonSetupOrName::Name("button2".to_string()), None);
+        state.set_setup(&ButtonSetupOrName::Name("button2".to_string()));
 
         // Test
         assert!(state.needs_rendering());
