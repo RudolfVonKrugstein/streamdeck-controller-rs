@@ -1,9 +1,9 @@
 use super::error::Error;
 use super::Defaults;
 use crate::config;
+use crate::config::LabelConfig;
 use image::{Pixel, Rgb, Rgba};
 use imageproc::drawing::Canvas;
-use crate::config::LabelConfig;
 
 /// Colored text, used in the button face
 struct ColoredText {
@@ -59,8 +59,7 @@ impl ButtonFace {
     }
 
     /// Draws the face from the other values
-    fn draw_face(&mut self,
-                 defaults: &Defaults) -> Result<(), Error> {
+    fn draw_face(&mut self, defaults: &Defaults) -> Result<(), Error> {
         // Start by creating the face (as rgba image
         // because we want to write rgba data on it).
         let (width, height) = self.device_type.button_image_size();
@@ -96,18 +95,10 @@ impl ButtonFace {
 
         // Draw the text on it
         if let Some(label) = &self.label {
-            label.draw(
-                &mut self.face,
-                TextPosition::Center,
-                &defaults.label_color,
-            );
+            label.draw(&mut self.face, TextPosition::Center, &defaults.label_color);
         }
         if let Some(sublabel) = &self.sublabel {
-            sublabel.draw(
-                &mut self.face,
-                TextPosition::Sub,
-                &defaults.sublabel_color,
-            );
+            sublabel.draw(&mut self.face, TextPosition::Sub, &defaults.sublabel_color);
         }
         if let Some(superlabel) = &self.superlabel {
             superlabel.draw(
@@ -151,24 +142,19 @@ enum TextPosition {
 }
 
 impl ColoredText {
-    pub fn from_config(config: &LabelConfig) -> Result<ColoredText, Error>{
+    pub fn from_config(config: &LabelConfig) -> Result<ColoredText, Error> {
         match config {
-            LabelConfig::JustText(text) => {
-                Ok(ColoredText {
-                    color: None,
-                    text: text.clone(),
-                })
-            },
-            LabelConfig::WithColor(config) => {
-                Ok(ColoredText {
-                    color: match &config.color {
-                        None => None,
-                        Some(c) => Some(c.to_image_rgba_color()
-                            .map_err(Error::ConfigError)?),
-                    },
-                    text: config.text.clone(),
-                })
-            }
+            LabelConfig::JustText(text) => Ok(ColoredText {
+                color: None,
+                text: text.clone(),
+            }),
+            LabelConfig::WithColor(config) => Ok(ColoredText {
+                color: match &config.color {
+                    None => None,
+                    Some(c) => Some(c.to_image_rgba_color().map_err(Error::ConfigError)?),
+                },
+                text: config.text.clone(),
+            }),
         }
     }
     /// Draw the positioned text on the button face.
@@ -193,9 +179,9 @@ impl ColoredText {
             image.width(),
             image.height() as f32
                 / match position {
-                TextPosition::Center => 1.1,
-                _ => 4.0,
-            },
+                    TextPosition::Center => 1.1,
+                    _ => 4.0,
+                },
         );
 
         let baseline = match position {
