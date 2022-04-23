@@ -11,7 +11,7 @@ mod error;
 pub use error::*;
 
 /// Information about a window just getting into foreground
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WindowInformation {
     pub title: String,
     pub executable: String,

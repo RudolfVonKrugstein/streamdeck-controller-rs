@@ -2,8 +2,7 @@ use super::error::Error;
 use super::Defaults;
 use crate::config;
 use crate::config::LabelConfig;
-use image::{Pixel, Rgb, Rgba};
-use imageproc::drawing::Canvas;
+use image::{Pixel, Rgba};
 
 /// Colored text, used in the button face
 struct ColoredText {

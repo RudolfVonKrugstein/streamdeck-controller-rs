@@ -7,6 +7,7 @@ use super::event_handler::EventHandler;
 use super::page::Page;
 use crate::config;
 use crate::config::{ButtonConfigWithName, ButtonFaceConfig, ColorConfig};
+use crate::foreground_window::WindowInformation;
 use crate::state::button::ButtonSetupOrName;
 use log::debug;
 use std::collections::HashMap;
@@ -27,8 +28,10 @@ pub struct AppState {
     loaded_pages: Vec<String>,
     /// The device type this is for!
     device_type: StreamDeckType,
-    /// Init event hanlder
+    /// Init event handler
     init_handler: Option<Arc<EventHandler>>,
+    /// The current foreground window
+    foreground_window: Option<WindowInformation>,
 }
 
 impl AppState {
@@ -88,7 +91,7 @@ impl AppState {
                         },
                         &defaults,
                     )
-                    .unwrap(),
+                        .unwrap(),
                 ),
             );
         }
@@ -126,6 +129,7 @@ impl AppState {
             init_handler,
             device_type: device_type.clone(),
             loaded_pages: Vec::new(),
+            foreground_window: None,
         };
 
         if let Some(page_names) = &config.default_pages {
@@ -260,31 +264,28 @@ impl AppState {
     }
 
     /// React to a foreground window
-    pub fn on_foreground_window(
-        &mut self,
-        title: &String,
-        executable: &String,
-        class_name: &String,
-    ) -> Result<(), Error> {
+    pub fn on_foreground_window(&mut self, window_info: &WindowInformation) -> Result<(), Error> {
         let mut pages_to_load = Vec::new();
         let mut pages_to_unload: Vec<String> = Vec::new();
 
         for (page_name, page) in &self.pages {
             for condition in &page.on_foreground_window {
-                if condition.matches(title, executable, class_name) {
+                if condition.matches(window_info) {
                     pages_to_load.push(page_name.clone());
-                } else if page.unload_if_not_loaded {
+                } else if page.unload_if_not_loaded && self.loaded_pages.contains(page_name) {
                     pages_to_unload.push(page_name.clone());
                 }
             }
         }
+
+        self.foreground_window = Some(window_info.clone());
 
         for page_name in pages_to_load {
             self.load_page(&page_name)?;
         }
 
         for page_name in pages_to_unload {
-            self.unload_page(&page_name);
+            self.unload_page(&page_name)?;
         }
 
         Ok(())
@@ -645,11 +646,11 @@ mod tests {
         // Act
         let mut state = AppState::from_config(&StreamDeckType::Orig, &config).unwrap();
         state
-            .on_foreground_window(
-                &String::from("This is a title for loading page2_title page"),
-                &String::from("/usr/bin/page2_exec"),
-                &String::from("Some class we don't care about"),
-            )
+            .on_foreground_window(&WindowInformation {
+                title: String::from("This is a title for loading page2_title page"),
+                executable: String::from("/usr/bin/page2_exec"),
+                class_name: String::from("Some class we don't care about"),
+            })
             .unwrap();
 
         // Test

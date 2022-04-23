@@ -9,7 +9,7 @@ mod state;
 use crate::input_event::{
     run_foreground_window_event_loop_thread, run_input_loop_thread, InputEvent,
 };
-use crate::state::{AppState, EventHandler};
+use crate::state::AppState;
 use clap::Parser;
 use log::{debug, info};
 use std::fs::File;
@@ -99,7 +99,7 @@ fn main() {
                 app_state
                     .write()
                     .unwrap()
-                    .on_foreground_window(&info.title, &info.executable, &info.class_name)
+                    .on_foreground_window(&info)
                     .unwrap();
                 None
             }
