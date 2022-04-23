@@ -1,14 +1,27 @@
 use super::error::Error;
 use super::Defaults;
 use crate::config;
-use image::Pixel;
+use image::{Pixel, Rgb, Rgba};
+use imageproc::drawing::Canvas;
+use crate::config::LabelConfig;
+
+/// Colored text, used in the button face
+struct ColoredText {
+    color: Option<Rgba<u8>>,
+    text: String,
+}
 
 /// Face (picture) to be printed on a button.
 ///
 /// The face is pre-rendered into an image.
 pub struct ButtonFace {
-    _device_type: streamdeck_hid_rs::StreamDeckType,
+    device_type: streamdeck_hid_rs::StreamDeckType,
     pub face: image::RgbImage,
+    color: Option<Rgba<u8>>,
+    file: Option<String>,
+    label: Option<ColoredText>,
+    sublabel: Option<ColoredText>,
+    superlabel: Option<ColoredText>,
 }
 
 impl ButtonFace {
@@ -19,16 +32,42 @@ impl ButtonFace {
         face_config: &config::ButtonFaceConfig,
         defaults: &Defaults,
     ) -> Result<ButtonFace, Error> {
+        let face = image::RgbImage::new(0, 0);
+        let mut button = ButtonFace {
+            face,
+            color: match &face_config.color {
+                None => None,
+                Some(c) => Some(c.to_image_rgba_color().map_err(Error::ConfigError)?),
+            },
+            file: face_config.file.clone(),
+            label: match &face_config.label {
+                None => None,
+                Some(label_config) => Some(ColoredText::from_config(label_config)?),
+            },
+            sublabel: match &face_config.sublabel {
+                None => None,
+                Some(label_config) => Some(ColoredText::from_config(label_config)?),
+            },
+            device_type: device_type.clone(),
+            superlabel: match &face_config.superlabel {
+                None => None,
+                Some(label_config) => Some(ColoredText::from_config(label_config)?),
+            },
+        };
+        button.draw_face(defaults)?;
+        Ok(button)
+    }
+
+    /// Draws the face from the other values
+    fn draw_face(&mut self,
+                 defaults: &Defaults) -> Result<(), Error> {
         // Start by creating the face (as rgba image
         // because we want to write rgba data on it).
-        let (width, height) = device_type.button_image_size();
+        let (width, height) = self.device_type.button_image_size();
         let mut face = image::RgbaImage::new(width, height);
 
         // Get the background color
-        let back_color = match &face_config.color {
-            None => defaults.background_color,
-            Some(c) => c.to_image_rgba_color().map_err(Error::ConfigError)?,
-        };
+        let back_color = self.color.unwrap_or(defaults.background_color);
 
         // Draw on the background color on the face
         imageproc::drawing::draw_filled_rect_mut(
@@ -38,7 +77,7 @@ impl ButtonFace {
         );
 
         // Draw the image!
-        if let Some(path) = &face_config.file {
+        if let Some(path) = &self.file {
             let top_image = image::io::Reader::open(path)
                 .map_err(Error::ImageOpeningError)?
                 .decode()
@@ -53,39 +92,31 @@ impl ButtonFace {
         }
 
         // Convert to rgb image
-        let mut face = image::DynamicImage::ImageRgba8(face).to_rgb8();
+        self.face = image::DynamicImage::ImageRgba8(face).to_rgb8();
 
         // Draw the text on it
-        if let Some(label_text) = &face_config.label {
-            draw_positioned_colored_text(
-                &mut face,
-                label_text,
+        if let Some(label) = &self.label {
+            label.draw(
+                &mut self.face,
                 TextPosition::Center,
                 &defaults.label_color,
             );
         }
-        if let Some(label_text) = &face_config.sublabel {
-            draw_positioned_colored_text(
-                &mut face,
-                label_text,
+        if let Some(sublabel) = &self.sublabel {
+            sublabel.draw(
+                &mut self.face,
                 TextPosition::Sub,
                 &defaults.sublabel_color,
             );
         }
-        if let Some(label_text) = &face_config.superlabel {
-            draw_positioned_colored_text(
-                &mut face,
-                label_text,
+        if let Some(superlabel) = &self.superlabel {
+            superlabel.draw(
+                &mut self.face,
                 TextPosition::Super,
                 &defaults.superlabel_color,
             );
         }
-
-        let device_type = device_type.clone();
-        Ok(ButtonFace {
-            face,
-            _device_type: device_type,
-        })
+        Ok(())
     }
 }
 
@@ -119,60 +150,70 @@ enum TextPosition {
     Super,
 }
 
-/// Draw the positioned text on the button face.
-fn draw_positioned_colored_text(
-    image: &mut image::RgbImage,
-    label: &config::LabelConfig,
-    position: TextPosition,
-    default_color: &image::Rgba<u8>,
-) {
-    // Font data
-    let font_data: &[u8] = include_bytes!("../../assets/DejaVuSans.ttf");
-    let font = rusttype::Font::try_from_vec(Vec::from(font_data)).unwrap();
-
-    // Find the color, defaulting to the default color
-    let color = match label {
-        config::LabelConfig::JustText(_) => *default_color,
-        config::LabelConfig::WithColor(c) => match &c.color {
-            None => *default_color,
-            Some(c) => match c.to_image_rgba_color() {
-                Err(_) => *default_color,
-                Ok(c) => c,
+impl ColoredText {
+    pub fn from_config(config: &LabelConfig) -> Result<ColoredText, Error>{
+        match config {
+            LabelConfig::JustText(text) => {
+                Ok(ColoredText {
+                    color: None,
+                    text: text.clone(),
+                })
             },
-        },
-    };
+            LabelConfig::WithColor(config) => {
+                Ok(ColoredText {
+                    color: match &config.color {
+                        None => None,
+                        Some(c) => Some(c.to_image_rgba_color()
+                            .map_err(Error::ConfigError)?),
+                    },
+                    text: config.text.clone(),
+                })
+            }
+        }
+    }
+    /// Draw the positioned text on the button face.
+    fn draw(
+        &self,
+        image: &mut image::RgbImage,
+        position: TextPosition,
+        default_color: &image::Rgba<u8>,
+    ) {
+        // Font data
+        let font_data: &[u8] = include_bytes!("../../assets/DejaVuSans.ttf");
+        let font = rusttype::Font::try_from_vec(Vec::from(font_data)).unwrap();
 
-    let text = match label {
-        config::LabelConfig::JustText(s) => s,
-        config::LabelConfig::WithColor(c) => &c.text,
-    };
+        // Find the color, defaulting to the default color
+        let color = self.color.as_ref().unwrap_or(default_color);
 
-    let (scale, w, h) = find_text_scale(
-        text.as_str(),
-        &font,
-        image.width(),
-        image.height() as f32
-            / match position {
+        let text = &self.text;
+
+        let (scale, w, h) = find_text_scale(
+            text.as_str(),
+            &font,
+            image.width(),
+            image.height() as f32
+                / match position {
                 TextPosition::Center => 1.1,
                 _ => 4.0,
             },
-    );
+        );
 
-    let baseline = match position {
-        TextPosition::Center => image.height() as f32 / 2.0,
-        TextPosition::Sub => image.height() as f32 * 4.0 / 5.0,
-        TextPosition::Super => image.height() as f32 / 5.0,
-    } as i32;
+        let baseline = match position {
+            TextPosition::Center => image.height() as f32 / 2.0,
+            TextPosition::Sub => image.height() as f32 * 4.0 / 5.0,
+            TextPosition::Super => image.height() as f32 / 5.0,
+        } as i32;
 
-    imageproc::drawing::draw_text_mut(
-        image,
-        color.to_rgb(),
-        (image.width() as i32 - w) / 2,
-        baseline - h / 2,
-        scale,
-        &font,
-        text.as_str(),
-    );
+        imageproc::drawing::draw_text_mut(
+            image,
+            color.to_rgb(),
+            (image.width() as i32 - w) / 2,
+            baseline - h / 2,
+            scale,
+            &font,
+            text.as_str(),
+        );
+    }
 }
 
 #[cfg(test)]
