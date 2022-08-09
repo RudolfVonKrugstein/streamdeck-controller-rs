@@ -44,7 +44,9 @@ fn main() {
     // Change to the directory of the config
     let config_dir = args.config.as_path().parent().unwrap();
     std::env::set_current_dir(&config_dir).unwrap();
-    let app_state = RwLock::new(AppState::from_config(&device.device_type, &config).unwrap());
+    let app_state = Arc::new(RwLock::new(
+        AppState::from_config(&device.device_type, &config).unwrap(),
+    ));
 
     // Create the channels for communication
     let (sender, receiver): (
@@ -58,11 +60,13 @@ fn main() {
     // Run foreground window event thread
     run_foreground_window_event_loop_thread(sender.clone()).unwrap();
 
+    // The script engine!
+    let engine = crate::script_engine::PythonEngine::new(&app_state).unwrap();
+
     // Run init script
     {
         if let Some(init_handler) = app_state.read().unwrap().get_init_handler() {
             debug!("running init script");
-            let engine = crate::script_engine::PythonEngine::new();
             engine.run_event_handler(&init_handler).unwrap();
         }
     }
@@ -106,9 +110,9 @@ fn main() {
         };
 
         if let Some(event_handler) = handler {
-            let engine = crate::script_engine::PythonEngine::new();
-
-            engine.run_event_handler(&event_handler).unwrap();
+            engine
+                .run_event_handler(&event_handler)
+                .unwrap();
         }
     }
 }

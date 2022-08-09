@@ -1,4 +1,9 @@
 use crate::config;
+use crate::config::ButtonPositionConfig;
+use crate::state::error::Error;
+use crate::state::error::Error::ConfigParserError;
+use regex::Regex;
+use std::str::FromStr;
 use streamdeck_hid_rs::StreamDeckType;
 
 /// Position on the Streamdeck (for row or col).
@@ -49,10 +54,31 @@ impl ButtonPosition {
     /// # Return
     ///
     /// The button position
-    pub fn from_config(config: &config::ButtonPositionConfig) -> ButtonPosition {
-        ButtonPosition {
-            col: PositionFromBorder::from_array_index(config.col),
-            row: PositionFromBorder::from_array_index(config.row),
+    pub fn from_config(config: &config::ButtonPositionConfig) -> Result<ButtonPosition, Error> {
+        match config {
+            ButtonPositionConfig::ButtonPositionTupleConfig(text) => {
+                let parser = Regex::new(r"^\(\W*(\d+)\W*,\W*(\d+)\W*\)$").unwrap();
+                let capture = parser.captures(text);
+                if let Some(captures) = capture {
+                    let capture0 = &captures[1];
+                    let capture1 = &captures[2];
+                    return Ok(ButtonPosition {
+                        col: PositionFromBorder::FromStart(
+                            u8::from_str(&capture0)
+                                .map_err(|_| ConfigParserError(text.clone()))?,
+                        ),
+                        row: PositionFromBorder::FromStart(
+                            u8::from_str(&capture1)
+                                .map_err(|_| ConfigParserError(text.clone()))?,
+                        ),
+                    });
+                }
+                Err(ConfigParserError(text.clone()))
+            }
+            ButtonPositionConfig::ButtonPositionObjectConfig(object) => Ok(ButtonPosition {
+                col: PositionFromBorder::from_array_index(object.col),
+                row: PositionFromBorder::from_array_index(object.row),
+            }),
         }
     }
 
@@ -79,6 +105,7 @@ impl ButtonPosition {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::ButtonPositionObject;
 
     #[test]
     fn position_from_border_from_positive_index() {
@@ -114,8 +141,13 @@ mod tests {
     fn top_right_is_index_zero() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position =
-                ButtonPosition::from_config(&config::ButtonPositionConfig { row: 0, col: -1 });
+            let position = ButtonPosition::from_config(
+                &config::ButtonPositionConfig::ButtonPositionObjectConfig(ButtonPositionObject {
+                    row: 0,
+                    col: -1,
+                }),
+            )
+            .unwrap();
             // Act
             let index = position.to_button_index(&device_type);
             // Test
@@ -127,8 +159,13 @@ mod tests {
     fn bottom_left_is_last_index() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position =
-                ButtonPosition::from_config(&&config::ButtonPositionConfig { row: -1, col: 0 });
+            let position = ButtonPosition::from_config(
+                &&config::ButtonPositionConfig::ButtonPositionObjectConfig(ButtonPositionObject {
+                    row: -1,
+                    col: 0,
+                }),
+            )
+            .unwrap();
             // Act
             let index = position.to_button_index(&device_type);
             // Test
@@ -140,8 +177,13 @@ mod tests {
     fn top_left_is_index_cols() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position =
-                ButtonPosition::from_config(&&config::ButtonPositionConfig { row: 0, col: 0 });
+            let position = ButtonPosition::from_config(
+                &&config::ButtonPositionConfig::ButtonPositionObjectConfig(ButtonPositionObject {
+                    row: 0,
+                    col: 0,
+                }),
+            )
+            .unwrap();
             // Act
             let index = position.to_button_index(&device_type);
             // Test
@@ -153,8 +195,13 @@ mod tests {
     fn bottom_right_is_last_index_minus_cols() {
         for device_type in StreamDeckType::ALL {
             // Setup
-            let position =
-                ButtonPosition::from_config(&&config::ButtonPositionConfig { row: -1, col: -1 });
+            let position = ButtonPosition::from_config(
+                &&config::ButtonPositionConfig::ButtonPositionObjectConfig(ButtonPositionObject {
+                    row: -1,
+                    col: -1,
+                }),
+            )
+            .unwrap();
             // Act
             let index = position.to_button_index(&device_type);
             // Test

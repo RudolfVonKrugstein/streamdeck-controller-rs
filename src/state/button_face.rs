@@ -57,6 +57,47 @@ impl ButtonFace {
         Ok(button)
     }
 
+    pub fn empty(device_type: streamdeck_hid_rs::StreamDeckType) -> ButtonFace {
+        ButtonFace {
+            device_type,
+            face: image::RgbImage::new(0, 0),
+            color: None,
+            file: None,
+            label: None,
+            sublabel: None,
+            superlabel: None
+        }
+    }
+
+    /// Updates the face with new values
+    pub fn update_values(&mut self,
+                  color: Option<Rgba<u8>>,
+                  file: Option<String>,
+                  label: Option<String>,
+                  labelcolor: Option<Rgba<u8>>,
+                  sublabel: Option<String>,
+                  sublabelcolor: Option<Rgba<u8>>,
+                  superlabel: Option<String>,
+                  superlabelcolor: Option<Rgba<u8>>,
+                  defaults: &Defaults) -> Result<(), Error> {
+        if color.is_some() {
+            self.color = color;
+        }
+        if file.is_some() {
+            self.file = file;
+        }
+        if label.is_some() || labelcolor.is_some() {
+            self.label.map(|mut l| l.update_values(label, labelcolor));
+        }
+        if sublabel.is_some() || sublabelcolor.is_some() {
+            self.label.map(|mut l| l.update_values(sublabel, sublabelcolor));
+        }
+        if superlabel.is_some() || superlabelcolor.is_some() {
+            self.label.map(|mut l| l.update_values(superlabel, superlabelcolor));
+        }
+        self.draw_face(defaults)
+    }
+
     /// Draws the face from the other values
     fn draw_face(&mut self, defaults: &Defaults) -> Result<(), Error> {
         // Start by creating the face (as rgba image
@@ -156,6 +197,16 @@ impl ColoredText {
             }),
         }
     }
+
+    pub fn update_values(&mut self, label: Option<String>, color: Option<Rgba<u8>>) {
+        if let Some(label_text) = label {
+            self.text = label_text;
+        }
+        if let Some(label_color) = color {
+            self.color = Some(label_color);
+        }
+    }
+
     /// Draw the positioned text on the button face.
     fn draw(
         &self,

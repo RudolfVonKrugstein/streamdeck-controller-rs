@@ -29,6 +29,7 @@ pub struct PageLoadConditions {
 mod tests {
     use super::*;
     use crate::config::button::ButtonOrButtonName;
+    use crate::config::ButtonPositionObject;
 
     #[test]
     fn page_button_config() {
@@ -47,7 +48,10 @@ button: button1
         assert_eq!(
             deserialize,
             PageButtonConfig {
-                position: ButtonPositionConfig { row: 0, col: 1 },
+                position: ButtonPositionConfig::ButtonPositionObjectConfig(ButtonPositionObject {
+                    row: 0,
+                    col: 1
+                }),
                 button: ButtonOrButtonName::ButtonName(String::from("button1"))
             }
         );
@@ -91,7 +95,9 @@ buttons:
                 name: String::from("page1"),
                 on_app: None,
                 buttons: Vec::from([PageButtonConfig {
-                    position: ButtonPositionConfig { row: 0, col: 1 },
+                    position: ButtonPositionConfig::ButtonPositionObjectConfig(
+                        ButtonPositionObject { row: 0, col: 1 }
+                    ),
                     button: ButtonOrButtonName::ButtonName(String::from("button1"))
                 }])
             }
@@ -131,7 +137,9 @@ buttons:
                     remove: None
                 }),
                 buttons: Vec::from([PageButtonConfig {
-                    position: ButtonPositionConfig { row: 0, col: 1 },
+                    position: ButtonPositionConfig::ButtonPositionObjectConfig(
+                        ButtonPositionObject { row: 0, col: 1 }
+                    ),
                     button: ButtonOrButtonName::ButtonName(String::from("button1"))
                 }])
             }

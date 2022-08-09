@@ -8,10 +8,10 @@ use super::page::Page;
 use crate::config;
 use crate::config::{ButtonConfigWithName, ButtonFaceConfig, ColorConfig};
 use crate::foreground_window::WindowInformation;
-use crate::state::button::ButtonSetupOrName;
 use log::debug;
 use std::collections::HashMap;
 use std::sync::Arc;
+use image::Rgba;
 use streamdeck_hid_rs::StreamDeckType;
 
 /// The complete app state!
@@ -91,7 +91,7 @@ impl AppState {
                         },
                         &defaults,
                     )
-                        .unwrap(),
+                    .unwrap(),
                 ),
             );
         }
@@ -192,6 +192,51 @@ impl AppState {
         result
     }
 
+    /// Updates the up face of a named button.
+    ///
+    /// # Arguments
+    ///
+    /// button_name - The name of the named button
+    ///
+    /// # Return
+    ///
+    /// () if all went ok, Error if the button was ot found.
+    pub fn set_named_button_up_face(
+        &mut self,
+        button_name: &String,
+        color: Option<Rgba<u8>>,
+        file: Option<String>,
+        label: Option<String>,
+        labelcolor: Option<Rgba<u8>>,
+        sublabel: Option<String>,
+        sublabelcolor: Option<Rgba<u8>>,
+        superlabel: Option<String>,
+        superlabelcolor: Option<Rgba<u8>>,
+    ) -> Result<(), Error> {
+        // Find the button
+        let mut button = self
+            .named_buttons
+            .get(button_name)
+            .ok_or(Error::ButtonNotFound(button_name.clone()))?;
+
+        // Update the button
+        if let Some(uf) = &mut button.up_face {
+            uf.update_values(color, file, label, labelcolor, sublabel, sublabelcolor, superlabel, superlabelcolor, &self.defaults)?;
+        } else {
+            let mut uf = Arc::new(ButtonFace::empty(self.device_type.clone()));
+            uf.update_values(color, file, label, labelcolor, sublabel, sublabelcolor, superlabel, superlabelcolor, &self.defaults)?;
+            button.up_face = Some(uf);
+        }
+        // Set all buttons using this to re-render!
+        for mut button in self.buttons {
+            if button.uses_button(button_name) {
+                button.set_needs_rendering();
+            }
+        }
+
+        Ok(())
+    }
+
     /// Loads a page, setting all the buttons.
     ///
     /// # Arguments
@@ -201,7 +246,7 @@ impl AppState {
     /// # Return
     ///
     /// () if all went ok, Error if the page is not found.
-    fn load_page(&mut self, page_name: &String) -> Result<(), Error> {
+    pub fn load_page(&mut self, page_name: &String) -> Result<(), Error> {
         // Find the page
         let page = self
             .pages
@@ -214,7 +259,7 @@ impl AppState {
         // Load all the buttons
         for button in &page.buttons {
             self.buttons[button.position.to_button_index(&self.device_type)]
-                .set_setup(&button.setup);
+                .set_button(button.button_name.clone());
         }
 
         // All went fine!
@@ -231,7 +276,7 @@ impl AppState {
     /// # Return
     ///
     /// () if all went ok, Error if something went wrong
-    fn unload_page(&mut self, page_name: &String) -> Result<(), Error> {
+    pub fn unload_page(&mut self, page_name: &String) -> Result<(), Error> {
         // Find the page
         let page = self
             .pages
@@ -245,14 +290,14 @@ impl AppState {
         for button_index in 0..self.device_type.total_num_buttons() {
             if page.get_button(&self.device_type, button_index).is_some() {
                 // Button needs to be removed, that means we have to find the correct button from the stack!
-                self.buttons[button_index].set_setup(&ButtonSetupOrName::Name("empty".to_string()));
+                self.buttons[button_index].set_button("empty".to_string());
                 for stack_page_name in &self.loaded_pages {
                     if let Some(button) = self
                         .pages
                         .get(stack_page_name.as_str())
                         .and_then(|p| p.get_button(&self.device_type, button_index))
                     {
-                        self.buttons[button_index].set_setup(&button.setup);
+                        self.buttons[button_index].set_button(button.button_name.clone());
                     }
                 }
             }
@@ -334,10 +379,12 @@ mod tests {
                 if add_doubled_name_error {}
 
                 page_buttons.push(config::PageButtonConfig {
-                    position: config::ButtonPositionConfig {
-                        row: button_id / 5,
-                        col: button_id % 5,
-                    },
+                    position: config::ButtonPositionConfig::ButtonPositionObjectConfig(
+                        config::ButtonPositionObject {
+                            row: button_id / 5,
+                            col: button_id % 5,
+                        },
+                    ),
                     button: config::ButtonOrButtonName::Button(config::ButtonConfigOptionalName {
                         name: Some(
                             if add_doubled_name_error && button_id == 0 && page_id == 0 {

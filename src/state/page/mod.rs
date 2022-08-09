@@ -43,6 +43,7 @@ impl Page {
 
         for button_config in &config.buttons {
             let (button, named_button) = PositionedButtonSetup::from_config_with_named_button(
+                &config.name,
                 device_type,
                 button_config,
                 defaults,
@@ -82,6 +83,7 @@ impl Page {
 mod tests {
     use super::*;
     use crate::config;
+    use crate::config::ButtonPositionObject;
 
     #[test]
     fn no_buttons_with_names_no_named_buttons() {
@@ -91,7 +93,9 @@ mod tests {
             on_app: None,
             buttons: Vec::from([
                 config::PageButtonConfig {
-                    position: config::ButtonPositionConfig { row: 0, col: 0 },
+                    position: config::ButtonPositionConfig::ButtonPositionObjectConfig(
+                        ButtonPositionObject { row: 0, col: 0 },
+                    ),
                     button: config::ButtonOrButtonName::Button(config::ButtonConfigOptionalName {
                         name: None,
                         up_face: None,
@@ -101,7 +105,9 @@ mod tests {
                     }),
                 },
                 config::PageButtonConfig {
-                    position: config::ButtonPositionConfig { row: 0, col: 1 },
+                    position: config::ButtonPositionConfig::ButtonPositionObjectConfig(
+                        ButtonPositionObject { row: 0, col: 1 },
+                    ),
                     button: config::ButtonOrButtonName::ButtonName(String::from("named_button")),
                 },
             ]),
@@ -125,7 +131,9 @@ mod tests {
             name: String::from("page1"),
             on_app: None,
             buttons: Vec::from([config::PageButtonConfig {
-                position: config::ButtonPositionConfig { row: 0, col: 0 },
+                position: config::ButtonPositionConfig::ButtonPositionObjectConfig(
+                    ButtonPositionObject { row: 0, col: 0 },
+                ),
                 button: config::ButtonOrButtonName::Button(config::ButtonConfigOptionalName {
                     name: Some(String::from("button_name")),
                     up_face: None,

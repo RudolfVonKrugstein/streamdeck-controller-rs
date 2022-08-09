@@ -1,11 +1,19 @@
 use serde::Deserialize;
 
+/// Button positions can be given as tuples ar os objects!
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(untagged)]
+pub enum ButtonPositionConfig {
+    ButtonPositionTupleConfig(String),
+    ButtonPositionObjectConfig(ButtonPositionObject),
+}
+
 /// Position of a button on a page.
 ///
 /// [row] and [col] can be negative, setting the position counting from right or below.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub struct ButtonPositionConfig {
+pub struct ButtonPositionObject {
     pub row: i32,
     pub col: i32,
 }
@@ -23,7 +31,13 @@ mod tests {
         let deserialize: ButtonPositionConfig = serde_yaml::from_str(&yaml).unwrap();
 
         // Test
-        assert_eq!(deserialize, ButtonPositionConfig { row: 0, col: 1 });
+        assert_eq!(
+            deserialize,
+            ButtonPositionConfig::ButtonPositionObjectConfig(ButtonPositionObject {
+                row: 0,
+                col: 1
+            })
+        );
     }
 
     #[test]
@@ -35,7 +49,13 @@ mod tests {
         let deserialize: ButtonPositionConfig = serde_yaml::from_str(&yaml).unwrap();
 
         // Test
-        assert_eq!(deserialize, ButtonPositionConfig { row: -1, col: -2 });
+        assert_eq!(
+            deserialize,
+            ButtonPositionConfig::ButtonPositionObjectConfig(ButtonPositionObject {
+                row: -1,
+                col: -2
+            })
+        );
     }
 
     #[test]

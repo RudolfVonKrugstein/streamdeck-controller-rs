@@ -12,34 +12,36 @@ pub enum ColorConfig {
     RGB(ColorConfigRGB),
 }
 
+pub fn hex_string_to_rgba_color(hex: &String) -> Result<image::Rgba<u8>, error::Error> {
+    if &hex[..1] != "#" {
+        return Err(error::Error::InvalidColorHexString(hex.clone()));
+    }
+    let without_prefix = hex.trim_start_matches("#");
+    let num = u32::from_str_radix(without_prefix, 16)
+        .map_err(|_| error::Error::InvalidColorHexString(hex.clone()))?;
+    // Result
+    match without_prefix.len() {
+        6 => Ok(image::Rgba([
+            (num >> 16) as u8,
+            (num >> 8) as u8,
+            (num & 0xFF) as u8,
+            255,
+        ])),
+        8 => Ok(image::Rgba([
+            (num >> 24) as u8,
+            (num >> 16) as u8,
+            (num >> 8) as u8,
+            (num & 0xFF) as u8,
+        ])),
+        _ => Err(error::Error::InvalidColorHexString(hex.clone())),
+    }
+}
+
 impl ColorConfig {
     /// Convert to an image color.
     pub fn to_image_rgba_color(&self) -> Result<image::Rgba<u8>, error::Error> {
         match self {
-            ColorConfig::HEXString(hex) => {
-                if &hex[..1] != "#" {
-                    return Err(error::Error::InvalidColorHexString(hex.clone()));
-                }
-                let without_prefix = hex.trim_start_matches("#");
-                let num = u32::from_str_radix(without_prefix, 16)
-                    .map_err(|_| error::Error::InvalidColorHexString(hex.clone()))?;
-                // Result
-                match without_prefix.len() {
-                    6 => Ok(image::Rgba([
-                        (num >> 16) as u8,
-                        (num >> 8) as u8,
-                        (num & 0xFF) as u8,
-                        255,
-                    ])),
-                    8 => Ok(image::Rgba([
-                        (num >> 24) as u8,
-                        (num >> 16) as u8,
-                        (num >> 8) as u8,
-                        (num & 0xFF) as u8,
-                    ])),
-                    _ => Err(error::Error::InvalidColorHexString(hex.clone())),
-                }
-            }
+            ColorConfig::HEXString(hex) => hex_string_to_rgba_color(hex),
             ColorConfig::RGB(c) => Ok(image::Rgba([c.red, c.green, c.blue, 0xFF])),
         }
     }
