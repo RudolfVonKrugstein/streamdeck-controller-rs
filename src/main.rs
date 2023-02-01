@@ -73,10 +73,9 @@ fn main() {
 
     // Receive events!
     loop {
+        let mut app_state = app_state.write().unwrap();
         let faces = {
             app_state
-                .write()
-                .unwrap()
                 .set_rendered_and_get_rendering_faces()
         };
         for (button_id, face) in faces {
@@ -87,12 +86,8 @@ fn main() {
         let e = receiver.recv().unwrap();
         let handler = match e {
             InputEvent::ButtonDownEvent(button_id) => app_state
-                .write()
-                .unwrap()
                 .on_button_pressed(button_id as usize),
             InputEvent::ButtonUpEvent(button_id) => app_state
-                .write()
-                .unwrap()
                 .on_button_released(button_id as usize),
             InputEvent::ForegroundWindow(info) => {
                 // So something
@@ -101,8 +96,6 @@ fn main() {
                     info.title, info.executable, info.class_name
                 );
                 app_state
-                    .write()
-                    .unwrap()
                     .on_foreground_window(&info)
                     .unwrap();
                 None

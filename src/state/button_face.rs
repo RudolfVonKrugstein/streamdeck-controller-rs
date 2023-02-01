@@ -87,13 +87,13 @@ impl ButtonFace {
             self.file = file;
         }
         if label.is_some() || labelcolor.is_some() {
-            self.label.map(|mut l| l.update_values(label, labelcolor));
+            self.label.as_mut().map(|mut l| l.update_values(label, labelcolor));
         }
         if sublabel.is_some() || sublabelcolor.is_some() {
-            self.label.map(|mut l| l.update_values(sublabel, sublabelcolor));
+            self.label.as_mut().map(|mut l| l.update_values(sublabel, sublabelcolor));
         }
         if superlabel.is_some() || superlabelcolor.is_some() {
-            self.label.map(|mut l| l.update_values(superlabel, superlabelcolor));
+            self.label.as_mut().map(|mut l| l.update_values(superlabel, superlabelcolor));
         }
         self.draw_face(defaults)
     }

@@ -24,7 +24,7 @@ impl PythonEngine {
 
     pub fn run_event_handler(
         &self,
-        event_handler: &Arc<crate::state::EventHandler>
+        event_handler: &crate::state::EventHandler
     ) -> Result<(), PyErr> {
         match Python::with_gil(|py| -> Result<(), PyErr> {
             let sys = py.import("sys")?;

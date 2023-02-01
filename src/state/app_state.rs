@@ -19,7 +19,7 @@ pub struct AppState {
     /// Defaults!
     defaults: Defaults,
     /// Named buttons, that can be used and modified
-    named_buttons: HashMap<String, Arc<ButtonSetup>>,
+    named_buttons: HashMap<String, ButtonSetup>,
     /// Pages, that can be loaded
     pages: HashMap<String, Arc<Page>>,
     /// The current loaded buttons
@@ -52,7 +52,7 @@ impl AppState {
     ) -> Result<AppState, Error> {
         let defaults = Defaults::from_config(&config.defaults)?;
 
-        let mut named_buttons: HashMap<String, Arc<ButtonSetup>> = HashMap::new();
+        let mut named_buttons: HashMap<String, ButtonSetup> = HashMap::new();
 
         if let Some(config_buttons) = &config.buttons {
             for button_config in config_buttons {
@@ -61,10 +61,8 @@ impl AppState {
                 }
                 named_buttons.insert(
                     button_config.name.clone(),
-                    Arc::new(
                         ButtonSetup::from_config_with_name(&device_type, &button_config, &defaults)
                             .unwrap(),
-                    ),
                 );
             }
         }
@@ -73,26 +71,24 @@ impl AppState {
         if !named_buttons.contains_key("empty") {
             named_buttons.insert(
                 "empty".to_string(),
-                Arc::new(
-                    ButtonSetup::from_config_with_name(
-                        &device_type,
-                        &ButtonConfigWithName {
-                            name: "empty".to_string(),
-                            up_face: Some(ButtonFaceConfig {
-                                color: Some(ColorConfig::HEXString("#000000".to_string())),
-                                file: None,
-                                label: None,
-                                sublabel: None,
-                                superlabel: None,
-                            }),
-                            down_face: None,
-                            up_handler: None,
-                            down_handler: None,
-                        },
-                        &defaults,
-                    )
+                ButtonSetup::from_config_with_name(
+                    &device_type,
+                    &ButtonConfigWithName {
+                        name: "empty".to_string(),
+                        up_face: Some(ButtonFaceConfig {
+                            color: Some(ColorConfig::HEXString("#000000".to_string())),
+                            file: None,
+                            label: None,
+                            sublabel: None,
+                            superlabel: None,
+                        }),
+                        down_face: None,
+                        up_handler: None,
+                        down_handler: None,
+                    },
+                    &defaults,
+                )
                     .unwrap(),
-                ),
             );
         }
 
@@ -154,7 +150,7 @@ impl AppState {
     /// # Return
     ///
     /// Event handler, that should be executed as a result of the button press.
-    pub fn on_button_pressed(&mut self, button_id: usize) -> Option<Arc<EventHandler>> {
+    pub fn on_button_pressed(&mut self, button_id: usize) -> Option<&EventHandler> {
         let button = self.buttons.get_mut(button_id)?;
         button.set_pressed(&self.named_buttons)
     }
@@ -168,7 +164,7 @@ impl AppState {
     /// # Return
     ///
     /// Event handler, that should be executed as a result of the button release.
-    pub fn on_button_released(&mut self, button_id: usize) -> Option<Arc<EventHandler>> {
+    pub fn on_button_released(&mut self, button_id: usize) -> Option<&EventHandler> {
         let button = self.buttons.get_mut(button_id)?;
         button.set_released(&self.named_buttons)
     }
@@ -181,10 +177,10 @@ impl AppState {
     ///
     /// List of tuples with the id of the button to be rendered and the ButtonFace that
     /// should be rendered on the button.
-    pub fn set_rendered_and_get_rendering_faces(&mut self) -> Vec<(u8, Arc<ButtonFace>)> {
+    pub fn set_rendered_and_get_rendering_faces(&mut self) -> Vec<(u8, &ButtonFace)> {
         let mut result = Vec::new();
-        for id in 0..self.buttons.len() {
-            match self.buttons[id].set_rendered_and_get_face_for_rendering(&self.named_buttons) {
+        for (id, button) in self.buttons.iter_mut().enumerate() {
+            match button.set_rendered_and_get_face_for_rendering(&self.named_buttons) {
                 None => {}
                 Some(face) => result.push((id as u8, face.clone())),
             }
@@ -214,21 +210,21 @@ impl AppState {
         superlabelcolor: Option<Rgba<u8>>,
     ) -> Result<(), Error> {
         // Find the button
-        let mut button = self
+        let mut button= self
             .named_buttons
-            .get(button_name)
+            .get_mut(button_name)
             .ok_or(Error::ButtonNotFound(button_name.clone()))?;
 
         // Update the button
         if let Some(uf) = &mut button.up_face {
             uf.update_values(color, file, label, labelcolor, sublabel, sublabelcolor, superlabel, superlabelcolor, &self.defaults)?;
         } else {
-            let mut uf = Arc::new(ButtonFace::empty(self.device_type.clone()));
+            let mut uf = ButtonFace::empty(self.device_type.clone());
             uf.update_values(color, file, label, labelcolor, sublabel, sublabelcolor, superlabel, superlabelcolor, &self.defaults)?;
             button.up_face = Some(uf);
         }
         // Set all buttons using this to re-render!
-        for mut button in self.buttons {
+        for mut button in self.buttons.iter_mut() {
             if button.uses_button(button_name) {
                 button.set_needs_rendering();
             }

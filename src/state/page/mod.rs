@@ -25,7 +25,7 @@ impl Page {
         device_type: &StreamDeckType,
         config: &config::PageConfig,
         defaults: &Defaults,
-    ) -> Result<(Page, HashMap<String, Arc<ButtonSetup>>), Error> {
+    ) -> Result<(Page, HashMap<String, ButtonSetup>), Error> {
         let mut buttons = Vec::new();
         let mut named_buttons = HashMap::new();
         let mut unload_if_not_loaded = false;

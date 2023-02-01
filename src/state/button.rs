@@ -12,10 +12,10 @@ use streamdeck_hid_rs::StreamDeckType;
 /// This setup can be applied to any button. But it is not
 /// the state of concrete button, it is part of the state (see [ButtonState]).
 pub struct ButtonSetup {
-    pub up_face: Option<Arc<ButtonFace>>,
-    pub down_face: Option<Arc<ButtonFace>>,
-    pub up_handler: Option<Arc<EventHandler>>,
-    pub down_handler: Option<Arc<EventHandler>>,
+    pub up_face: Option<ButtonFace>,
+    pub down_face: Option<ButtonFace>,
+    pub up_handler: Option<EventHandler>,
+    pub down_handler: Option<EventHandler>,
 }
 
 impl ButtonSetup {
@@ -37,19 +37,19 @@ impl ButtonSetup {
         // Create the members
         let up_face = match &config.up_face {
             None => None,
-            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f, defaults)?)),
+            Some(f) => Some(ButtonFace::from_config(device_type, f, defaults)?),
         };
         let down_face = match &config.down_face {
             None => None,
-            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f, defaults)?)),
+            Some(f) => Some(ButtonFace::from_config(device_type, f, defaults)?),
         };
         let up_handler = match &config.up_handler {
             None => None,
-            Some(e) => Some(Arc::new(EventHandler::from_config(e)?)),
+            Some(e) => Some(EventHandler::from_config(e)?),
         };
         let down_handler = match &config.down_handler {
             None => None,
-            Some(e) => Some(Arc::new(EventHandler::from_config(e)?)),
+            Some(e) => Some(EventHandler::from_config(e)?),
         };
         Ok(ButtonSetup {
             up_face,
@@ -77,19 +77,19 @@ impl ButtonSetup {
         // Create the members
         let up_face = match &config.up_face {
             None => None,
-            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f, defaults)?)),
+            Some(f) => Some(ButtonFace::from_config(device_type, f, defaults)?),
         };
         let down_face = match &config.down_face {
             None => None,
-            Some(f) => Some(Arc::new(ButtonFace::from_config(device_type, f, defaults)?)),
+            Some(f) => Some(ButtonFace::from_config(device_type, f, defaults)?),
         };
         let up_handler = match &config.up_handler {
             None => None,
-            Some(e) => Some(Arc::new(EventHandler::from_config(e)?)),
+            Some(e) => Some(EventHandler::from_config(e)?),
         };
         let down_handler = match &config.down_handler {
             None => None,
-            Some(e) => Some(Arc::new(EventHandler::from_config(e)?)),
+            Some(e) => Some(EventHandler::from_config(e)?),
         };
         Ok(ButtonSetup {
             up_face,
@@ -139,23 +139,23 @@ impl ButtonState {
     }
 
     /// Sets the press state of the button
-    pub fn set_pressed(
+    pub fn set_pressed<'a>(
         &mut self,
-        named_buttons: &HashMap<String, Arc<ButtonSetup>>,
-    ) -> Option<Arc<EventHandler>> {
+        named_buttons: &'a HashMap<String, ButtonSetup>,
+    ) -> Option<&'a EventHandler> {
         self.press_state = PressState::Down;
         self.get_setup(named_buttons)
-            .and_then(|s| s.down_handler.clone())
+            .and_then(|s| s.down_handler.as_ref())
     }
 
     /// Sets the press state of the button
-    pub fn set_released(
+    pub fn set_released<'a>(
         &mut self,
-        named_buttons: &HashMap<String, Arc<ButtonSetup>>,
-    ) -> Option<Arc<EventHandler>> {
+        named_buttons: &'a HashMap<String, ButtonSetup>,
+    ) -> Option<&'a EventHandler> {
         self.press_state = PressState::Up;
         self.get_setup(named_buttons)
-            .and_then(|s| s.up_handler.clone())
+            .and_then(|s| s.up_handler.as_ref())
     }
 
     /// Returns whether the button needs rendering
@@ -168,11 +168,11 @@ impl ButtonState {
 
     /// Get the ButtonSetup, either from the internal setup
     /// or from the list of global setups
-    fn get_setup(
+    fn get_setup<'a>(
         &self,
-        named_buttons: &HashMap<String, Arc<ButtonSetup>>,
-    ) -> Option<Arc<ButtonSetup>> {
-        named_buttons.get(&self.button_name).cloned()
+        named_buttons: &'a HashMap<String, ButtonSetup>,
+    ) -> Option<&'a ButtonSetup> {
+        named_buttons.get(&self.button_name)
     }
 
     /// Sets/changes the setup for this button!
@@ -186,21 +186,21 @@ impl ButtonState {
     ///
     /// None - if no rendering is needed.
     /// Some(...) - The button face for rendering on this button.
-    pub fn set_rendered_and_get_face_for_rendering(
+    pub fn set_rendered_and_get_face_for_rendering<'a>(
         &mut self,
-        named_buttons: &HashMap<String, Arc<ButtonSetup>>,
-    ) -> Option<Arc<ButtonFace>> {
+        named_buttons: &'a HashMap<String, ButtonSetup>,
+    ) -> Option<&'a ButtonFace> {
         if self.needs_rendering() {
             self.render_state = Some(self.press_state.clone());
             let setup = self.get_setup(named_buttons)?;
             match self.press_state {
                 PressState::Up => match setup.up_face {
-                    None => setup.down_face.clone(),
-                    Some(_) => setup.up_face.clone(),
+                    None => setup.down_face.as_ref(),
+                    Some(_) => setup.up_face.as_ref(),
                 },
                 PressState::Down => match setup.down_face {
-                    None => setup.up_face.clone(),
-                    Some(_) => setup.down_face.clone(),
+                    None => setup.up_face.as_ref(),
+                    Some(_) => setup.down_face.as_ref(),
                 },
             }
         } else {

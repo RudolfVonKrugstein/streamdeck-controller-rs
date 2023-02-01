@@ -35,7 +35,7 @@ impl PositionedButtonSetup {
         device_type: &StreamDeckType,
         config: &config::PageButtonConfig,
         defaults: &Defaults,
-    ) -> Result<(PositionedButtonSetup, Option<(String, Arc<ButtonSetup>)>), Error> {
+    ) -> Result<(PositionedButtonSetup, Option<(String, ButtonSetup)>), Error> {
         let position = ButtonPosition::from_config(&config.position)?;
         // Create a button or just a name
         match &config.button {
@@ -44,12 +44,12 @@ impl PositionedButtonSetup {
             },
             ButtonOrButtonName::Button(setup) => {
                 // Set the name
-                let button_name = setup.name.unwrap_or_else(|| format!("page_{}_button_{}", page_name, position.to_button_index(device_type)));
+                let button_name = setup.name.clone().unwrap_or_else(|| format!("page_{}_button_{}", page_name, position.to_button_index(device_type)));
                 Ok(
                     (
                         PositionedButtonSetup { position, button_name: button_name.clone() },
                         Some(
-                            (button_name, Arc::new(ButtonSetup::from_optional_name_config(device_type, setup, defaults)?))
+                            (button_name, ButtonSetup::from_optional_name_config(device_type, setup, defaults)?)
                         )
                     )
                 )
